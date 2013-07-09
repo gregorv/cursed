@@ -37,7 +37,7 @@ class Character:
 class NPC(Character, metaclass=NPCRegistry):
     def __init__(self, game, level, loot):
         Character.__init__(self, game)
-        self.level = level
+        self.level = int(level)
         self.loot = loot
     
     def death_message(self):
@@ -124,12 +124,15 @@ class Player(Character):
         self.strength = 0
         self.spirit = 0
         self.regen = 0
+        self.mana_regen = 0
+        self.mana_regen_bonus = 0
         self.mana_bonus = 0
         self.strength_bonus = 0
         self.spirit_bonus = 0
         self.regen_bonus = 0
         self.in_hands = None
         self.armour = None
+        self.last_enemy = None
         
         self.level = 0 # force recalculation in apply_exp()
         self.apply_exp()
@@ -147,6 +150,7 @@ class Player(Character):
                 self.items[item] = 1
     
     def attack(self, target):
+        self.last_enemy = target
         if self.in_hands:
             self.in_hands.on_wield_attack(self, target)
             if self.in_hands.destroyed:
@@ -169,7 +173,8 @@ class Player(Character):
             self.max_mana = int(90 + 10*self.level**1.9 + self.mana_bonus)
             self.strength = int(self.level + (self.level/4.0)**4 + self.strength_bonus)
             self.spirit = int(self.level + (self.level/4.0)**4 + self.spirit_bonus)
-            self.regen = int(self.level*1.3 + self.regen_bonus)
+            self.regen = int(self.level*1.9 + self.regen_bonus)
+            self.mana_regen = int(self.level*2.9 + self.mana_regen_bonus)
             
             # binary-search where next lvl is
             start = self.exp

@@ -163,6 +163,9 @@ class Dungeon(BaseScreen):
             elif code == "r":
                 items = self.cur_dungeon.pop_items(self.game.player.x, self.game.player.y)
                 if items:
+                    name_set = set(items)
+                    logmsg = "Picked up a "+"and a".join(name_set)
+                    self.game.logger.log(logmsg)
                     self.game.player.add_items(items)
                     self.game.player_move_finished()
             else:

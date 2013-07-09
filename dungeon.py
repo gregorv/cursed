@@ -77,7 +77,7 @@ class Dungeon:
         npc_classes = NPCRegistry.upto_dungeonlevel(self.level)
         loot_classes = ItemRegistry.names_upto_dungeonlevel(self.level)
         for i in range(n):
-            level = max(1, random.gauss(self.level, 2))
+            level = int(max(1, random.gauss(self.level, 2.5)))
             cls = random.choice(npc_classes)
             num_loot_items = min(2, max(0, int(random.gauss(0, 2))))
             loot = [random.choice(loot_classes) for i in range(num_loot_items)]

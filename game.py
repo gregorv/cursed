@@ -25,6 +25,9 @@ class Logger:
         self.history.append(msg[:self.maxmsglen] if len(msg) > self.maxmsglen else msg)
         while(len(self.history) > self.maxlog):
             del self.history[0]
+            
+    def __call__(self, msg):
+        self.log(msg)
 
 class Game:
     def __init__(self, stdscr):
@@ -51,6 +54,9 @@ class Game:
     def player_move_finished(self):
         self.round += 1
         self.player.hp = min(self.player.max_hp, self.player.hp + self.player.regen)
+        old = self.player.mana
+        self.player.mana = min(self.player.max_mana, self.player.mana + self.player.mana_regen)
+        self.player.mana_regen_bonus += (self.player.mana - old) * 0.01
         self.dungeon.cur_dungeon.update()
         
     def set_active(self, new_active=""):
@@ -69,6 +75,7 @@ class Game:
         self.infoscr.addstr(3, 1,"STR {p.strength}".format(p=self.player))
         self.infoscr.addstr(3, 10,"SPR {p.spirit}".format(p=self.player))
         self.infoscr.addstr(4, 1,"RGN {p.regen}".format(p=self.player))
+        self.infoscr.addstr(4, 10,"MRG {p.mana_regen}".format(p=self.player))
         self.infoscr.addstr(5, 1,"EXP {p.exp} -> {p.exp_next_level}".format(p=self.player))
         self.infoscr.addstr(6, 1,"LVL {p.level}".format(p=self.player))
         self.infoscr.addstr(8, 1,"Wielded:")
@@ -84,6 +91,11 @@ class Game:
                                                         else ""))
         self.infoscr.addstr(13, 1,"Dungeon Level {0}".format(self.dungeon.level))
         self.infoscr.addstr(14, 1,"Round {0}".format(self.round))
+        
+        if self.player.last_enemy:
+            self.infoscr.addstr(16, 1,"{e.name}".format(e=self.player.last_enemy))
+            self.infoscr.addstr(18, 1,"HP {e.hp}/{e.max_hp}".format(e=self.player.last_enemy))
+            self.infoscr.addstr(17, 1,"LVL {e.level}".format(e=self.player.last_enemy))
         self.infoscr.noutrefresh()
         
     def handle_keypress(self, code, mod):
@@ -103,6 +115,7 @@ class Game:
         while not self.quit:
             self.draw()
             curses.doupdate()
+            self.player.last_enemy
             mod = False
             code = self.mainscr.getkey()
             if code == "\x1b":
