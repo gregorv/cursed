@@ -1,6 +1,7 @@
 
 import curses
 import dungeon
+from registry import ItemRegistry
 
 class BaseScreen:
     
@@ -28,7 +29,63 @@ class BaseScreen:
         self.scr.noutrefresh()
 
 class Inventory(BaseScreen):
-    pass
+    def __init__(self, game, scr):
+        BaseScreen.__init__(self, game, scr)
+        self.mode = None
+        
+    def on_deactivate(self):
+        self.mode = None
+    
+    def handle_keypress(self, code, mod):
+        if not mod and code == "\t":
+            self.game.set_active()
+        elif mod and code == "w":
+            self.mode = "wield"
+        elif mod and code == "t":
+            self.mode = "throw"
+        elif mod and code == "e":
+            self.mode = "quaff"
+        elif mod and code == "d":
+            self.mode = "drop"
+        elif not mod and code == "D":
+            self.mode = "drop all"
+        elif not mod and self.mode:
+            item_names = list(self.game.player.items.keys())
+            item_names.sort()
+            for i, item in enumerate(item_names):
+                access_key = chr(ord("a")+i)
+                if access_key == code:
+                    item_obj = ItemRegistry.by_name(item)(self.game)
+                    if self.mode == "wield":
+                        self.game.player.in_hands = item_obj
+                        self.game.player_move_finished()
+                        self.game.set_active()
+                    elif self.mode == "quaff":
+                        item_obj.on_quaff(self.game.player)
+                        self.game.player.items[item] -= 1
+                        if self.game.player.items[item] == 0:
+                            del self.game.player.items[item]
+                        self.game.player_move_finished()
+                        self.game.set_active()
+        else:
+            return False
+        return True
+                
+    def draw(self):
+        self.scr.clear()
+        self.scr.border()
+        self.scr.addstr(1, 10, self.name, curses.A_BOLD)
+        if not self.mode:
+            self.scr.addstr(self.scr.getmaxyx()[0]-2, 1, "^w-wield, ^t-throw, ^e-eat/quaff, ^d-drop, D-drop all")
+        else:
+            self.scr.addstr(self.scr.getmaxyx()[0]-2, 1, "Choose item to {0}".format(self.mode))
+        item_names = list(self.game.player.items.keys())
+        item_names.sort()
+        for i, item in enumerate(item_names):
+            access_key = chr(ord("a")+i)
+            amount = self.game.player.items[item]
+            self.scr.addstr(i+3, 2, "{0} - {1} {2}".format(access_key, item, "x{0}".format(amount) if amount != 1 else ""))
+        self.scr.noutrefresh()
 
 class Spells(BaseScreen):
     
@@ -43,17 +100,21 @@ class Dungeon(BaseScreen):
         BaseScreen.__init__(self, game, scr)
         self.level = 1
         max_y, max_x = self.scr.getmaxyx()
-        self.dungeons = {1: dungeon.Dungeon(1, max_x, max_y)}
+        self.dungeons = {1: dungeon.Dungeon(self.game, 1, max_x, max_y)}
         self.cur_dungeon = self.dungeons[self.level]
+        self.cur_dungeon.generate()
+        self.cur_dungeon.on_enter()
         
     def next_dungeon(self):
         self.dungeons[self.level].on_exit()
         self.level += 1
         if self.level not in self.dungeons:
             max_y, max_x = self.scr.getmaxyx()
-            self.dungeons[self.level] = dungeon.Dungeon(self, self.level, max_x, max_y)
+            self.dungeons[self.level] = dungeon.Dungeon(self.game, self.level, max_x, max_y)
+            self.dungeons[self.level].generate()
         self.dungeons[self.level].on_enter()
         self.cur_dungeon = self.dungeons[self.level]
+        self.game.player.x, self.game.player.y = self.cur_dungeon.pos_stairs_in
         
     def prev_dungeon(self):
         if self.level == 1:
@@ -62,6 +123,7 @@ class Dungeon(BaseScreen):
         self.level -= 1
         self.dungeons[self.level].on_enter()
         self.cur_dungeon = self.dungeons[self.level]
+        self.game.player.x, self.game.player.y = self.cur_dungeon.pos_stairs_out
     
     def handle_keypress(self, code, mod):
         move_player = 0, 0
@@ -89,6 +151,20 @@ class Dungeon(BaseScreen):
             elif code == "e": move_player = 1, -1
             elif code == "y": move_player = -1, 1
             elif code == "c": move_player = 1, 1
+            elif code == ".": self.game.player_move_finished()
+            elif code == "<" and self.level > 1:
+                if((self.game.player.x, self.game.player.y)
+                   == self.cur_dungeon.pos_stairs_in):
+                    self.prev_dungeon()
+            elif code == ">":
+                if((self.game.player.x, self.game.player.y)
+                   == self.cur_dungeon.pos_stairs_out):
+                    self.next_dungeon()
+            elif code == "r":
+                items = self.cur_dungeon.pop_items(self.game.player.x, self.game.player.y)
+                if items:
+                    self.game.player.add_items(items)
+                    self.game.player_move_finished()
             else:
                 return BaseScreen.handle_keypress(self, code, mod)
         if move_player != (0, 0):
@@ -97,6 +173,10 @@ class Dungeon(BaseScreen):
             other = self.cur_dungeon.collision_detect(*move_player, ignore=self.game.player)
             if not other:
                 self.game.player.x, self.game.player.y = move_player
+                self.game.player_move_finished()
+            elif other != "dungeon":
+                self.game.player.attack(other)
+                self.game.player_move_finished()
         return True
         
     def draw(self):
@@ -104,5 +184,5 @@ class Dungeon(BaseScreen):
         self.cur_dungeon.render(self.scr)
         self.scr.addch(self.game.player.y,
                        self.game.player.x,
-                       "H")
+                       "@")
         self.scr.noutrefresh()

@@ -34,6 +34,7 @@ class Game:
         self.messagescr = curses.newwin(5, 80, 20, 0)
         
         self.player = character.Player(self)
+        self.round = 1
        
         self.quit = False
         
@@ -47,6 +48,10 @@ class Game:
         self.logger = Logger(self.messagescr)
         self.active_game_screen = self.dungeon
         
+    def player_move_finished(self):
+        self.round += 1
+        self.player.hp = min(self.player.max_hp, self.player.hp + self.player.regen)
+        self.dungeon.cur_dungeon.update()
         
     def set_active(self, new_active=""):
         self.active_game_screen.on_deactivate()
@@ -63,22 +68,26 @@ class Game:
         self.infoscr.addstr(2, 1,"MNA {p.mana}/{p.max_mana}".format(p=self.player))
         self.infoscr.addstr(3, 1,"STR {p.strength}".format(p=self.player))
         self.infoscr.addstr(3, 10,"SPR {p.spirit}".format(p=self.player))
-        self.infoscr.addstr(4, 1,"EXP {p.exp} -> {p.exp_next_level}".format(p=self.player))
-        self.infoscr.addstr(5, 1,"LVL {p.level}".format(p=self.player))
-        self.infoscr.addstr(7, 1,"In hands: {0}".format(self.player.in_hands.name
+        self.infoscr.addstr(4, 1,"RGN {p.regen}".format(p=self.player))
+        self.infoscr.addstr(5, 1,"EXP {p.exp} -> {p.exp_next_level}".format(p=self.player))
+        self.infoscr.addstr(6, 1,"LVL {p.level}".format(p=self.player))
+        self.infoscr.addstr(8, 1,"Wielded:")
+        self.infoscr.addstr(9, 2,"{0}".format(self.player.in_hands.name
                                                         if self.player.in_hands
                                                         else "nothing"))
-        self.infoscr.addstr(8, 1,"Armour: +{0} {1}".format(self.player.armour.defense
+        self.infoscr.addstr(10, 1,"Armour:")
+        self.infoscr.addstr(11, 2,"+{0} {1}".format(self.player.armour.defense
                                                         if self.player.armour
                                                         else "0",
                                                         self.player.armour.name
                                                         if self.player.armour
                                                         else ""))
-        self.infoscr.addstr(10, 1,"Dungeon Level {0}".format(self.dungeon.level))
+        self.infoscr.addstr(13, 1,"Dungeon Level {0}".format(self.dungeon.level))
+        self.infoscr.addstr(14, 1,"Round {0}".format(self.round))
         self.infoscr.noutrefresh()
         
     def handle_keypress(self, code, mod):
-        if code == curses.KEY_ENTER:
+        if mod and code == "q":
             self.quit = True
         else:
             return False
@@ -93,13 +102,16 @@ class Game:
     def run(self):
         while not self.quit:
             self.draw()
+            curses.doupdate()
             mod = False
-            code = self.stdscr.getkey()
+            code = self.mainscr.getkey()
             if code == "\x1b":
                 mod = True
                 while code == "\x1b":
                     code = self.stdscr.getkey()
             key_listeners = [self, self.logger, self.active_game_screen]
+            if self.player.hp == 0:
+                key_listeners = [self]
             for listener in key_listeners:
                 if listener.handle_keypress(code, mod):
                     break
