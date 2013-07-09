@@ -94,7 +94,58 @@ class Spells(BaseScreen):
         self.scr.border()
         self.scr.addstr(1, 10, "Spells & Magic", curses.A_BOLD)
         self.scr.noutrefresh()
+        
+class PickTarget(BaseScreen):
+    def __init__(self, game, scr):
+        BaseScreen.__init__(self, game, scr)
+        self.cursor_position = 0, 0
+        
+    def do_move(self, x, y):
+        return True
+    
+    def on_activate(self):
+        self.cursor_position = self.game.player.x, self.game.player.y
+    
+    def handle_keypress(self, code, mod):
+        move_cursor = 0, 0
+        if mod:
+            return False
+        if code == "\t":
+            self.game.set_active()
+        elif code == "w": move_cursor = 0, -1
+        elif code == "a": move_cursor = -1, 0
+        elif code == "s": move_cursor = 0, 1
+        elif code == "d": move_cursor = 1, 0
+        elif code == "q": move_cursor = -1, -1
+        elif code == "e": move_cursor = 1, -1
+        elif code == "y": move_cursor = -1, 1
+        elif code == "c": move_cursor = 1, 1
+        else:
+            return False
+        
+        if move_cursor != (0, 0):
+            move_cursor = (move_cursor[0] + self.cursor_position[0],
+                           move_cursor[1] + self.cursor_position[1])
+            if self.do_move(*move_cursor):
+                self.cursor_position = move_cursor
+        
+        return True
+    
+    def draw(self):
+        self.scr.clear()
+        self.game.dungeon.cur_dungeon.render(self.scr)
+        self.scr.addch(self.game.player.y,
+                       self.game.player.x,
+                       "@")
+        self.scr.chgat(self.cursor_position[1],
+                       self.cursor_position[0],
+                       1,
+                       curses.color_pair(1))
+        self.scr.noutrefresh()
 
+class AnalyzeEnemy(PickTarget):
+    pass
+    
 class Dungeon(BaseScreen):
     def __init__(self, game, scr):
         BaseScreen.__init__(self, game, scr)
@@ -134,6 +185,7 @@ class Dungeon(BaseScreen):
         else:
             if code == "i": self.game.set_active("Inventory")
             elif code == "x": self.game.set_active("Spells")
+            elif code == "v": self.game.set_active("AnalyzeEnemy")
             elif code == "b":
                 self.game.player.exp += 1
                 self.game.player.apply_exp()

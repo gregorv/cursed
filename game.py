@@ -42,7 +42,7 @@ class Game:
         self.quit = False
         
         self.game_screens = {}
-        screen_factory = [gamescr.Dungeon, gamescr.Inventory, gamescr.Spells]
+        screen_factory = [gamescr.Dungeon, gamescr.Inventory, gamescr.Spells, gamescr.AnalyzeEnemy]
         for i, scr in enumerate(screen_factory):
             tmp = scr(self, self.mainscr)
             self.game_screens[tmp.name] = tmp
