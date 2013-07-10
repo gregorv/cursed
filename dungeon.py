@@ -36,6 +36,12 @@ class Dungeon:
         return items
         
     def update(self):
+        def removeKilledNPCs():
+            killed = list(filter(lambda npc: npc.hp <= 0, self.npc_list))
+            for npc in killed:
+                for item in npc.loot:
+                    self.item_list.append((npc.x, npc.y, item))
+        removeKilledNPCs()
         for npc in self.npc_list:
             npc.animate()
         for p in self.particle_list:
@@ -45,10 +51,7 @@ class Dungeon:
                 p.on_character_touch(other)
             p.lifetime -= 1
         self.particle_list = list(filter(lambda p: p.lifetime > 0, self.particle_list))
-        killed = list(filter(lambda npc: npc.hp <= 0, self.npc_list))
-        for npc in killed:
-            for item in npc.loot:
-                self.item_list.append((npc.x, npc.y, item))
+        removeKilledNPCs()
         self.npc_list = list(filter(lambda npc: npc.hp > 0, self.npc_list))
         
     def collision_detect(self, x, y, ignore=None):
@@ -102,6 +105,7 @@ class Dungeon:
             self.populate(3)
         for npc in self.npc_list:
             npc.last_know_player_pos = None
+    
     def on_exit(self):
         pass
         

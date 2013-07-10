@@ -340,6 +340,7 @@ class Player(Character):
         else:
             enemy_killed = target.damage(1)
         if enemy_killed:
+            self.strength_bonus += int(target.exp_loot()) / 0.05
             self.exp += int(target.exp_loot())
             self.apply_exp()
             self.game.logger.log("You killed the "+str(target.name))
