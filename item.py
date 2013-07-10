@@ -16,7 +16,7 @@ class Item(metaclass = ItemRegistry):
         Item.on_throw(thrower, target)
     
     def on_wield_attack(self, wielder, target):
-        pass
+        return False
     
     def on_read(self, reader):
         self.reader.spirit_bonus += 0.01
@@ -53,7 +53,7 @@ class Scroll(Item):
 class Potion(Item):
     symbol = "P"
     def effect(self, target):
-        pass
+        return False
     
     def on_throw(self, thrower, target):
         Item.on_throw(thrower, target)
@@ -64,8 +64,8 @@ class Potion(Item):
         self.effect(quaffer)
         
     def on_wield_attack(self, wielder, target):
-        self.effect(target)
         self.destroyed = True
+        return self.effect(target)
 
 class Food(Item):
     symbol = "%"
@@ -108,7 +108,7 @@ class RustySword(Sword):
     min_dungeon_level = 1
     def on_wield_attack(self, wielder, target):
         wielder.strength_bonus += 0.01
-        target.damage(max(1, wielder.strength/2))
+        return target.damage(max(1, wielder.strength/2))
 
 class OrcishDagger(Sword):
     name = "Orcish Dagger"
@@ -116,7 +116,7 @@ class OrcishDagger(Sword):
     min_dungeon_level = 2
     def on_wield_attack(self, wielder, target):
         wielder.strength_bonus += 0.005
-        target.damage(max(1, wielder.strength/1.3))
+        return target.damage(max(1, wielder.strength/1.3))
 
 class DrinkingCanSword(Sword):
     name = "Lemonade Can Sword"
@@ -124,7 +124,7 @@ class DrinkingCanSword(Sword):
     min_dungeon_level = 4
     def on_wield_attack(self, wielder, target):
         wielder.strength_bonus += 0.005
-        target.damage(max(1, wielder.strength))
+        return target.damage(max(1, wielder.strength))
 
 class GlowingIronSword(Sword):
     name = "Glowing Iron Sword"
@@ -138,4 +138,4 @@ class GlowingIronSword(Sword):
             wielder.spirit_bonus += 0.005
         else:
             magic_bonus = 0
-        target.damage(max(1, wielder.strength*2 + wielder.spirit_bonus))
+        return target.damage(max(1, wielder.strength*2 + wielder.spirit_bonus))

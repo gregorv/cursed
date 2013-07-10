@@ -4,6 +4,7 @@ class NPCRegistry(type):
     def __new__(mcs, name, bases, dict):
         cls = type.__new__(mcs, name, bases, dict)
         if("min_dungeon_level" in dict
+           and "max_dungeon_level" in dict
            and "symbol" in dict
            and "name" in dict):
             mcs.npc_classes.append(cls)
@@ -12,7 +13,7 @@ class NPCRegistry(type):
     @classmethod
     def upto_dungeonlevel(cls, dg_lvl):
         return list(filter(lambda npc: npc.min_dungeon_level <= dg_lvl, cls.npc_classes))
-    
+
 class ItemRegistry(type):
     item_classes = []
     def __new__(mcs, name, bases, dict):

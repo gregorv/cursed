@@ -3,7 +3,7 @@ import random
 
 import particle
 
-def trigger_action(spell, game, caster, target, position):
+def trigger_action(spell, game, caster, target, position, silent=False):
     s = spell_list[spell]
     try:
         if s["spirit"] > caster.spirit:
@@ -15,7 +15,8 @@ def trigger_action(spell, game, caster, target, position):
         caster.spirit_bonus += s["mana"]*s["spirit"]*0.01
         caster.mana_bonus += s["mana"]*0.02
     except CastException as e:
-        game.logger.log("Cannot cast {0}: {1}".format(spell_list[spell]["name"], str(e)))
+        if not silent:
+            game.logger.log("Cannot cast {0}: {1}".format(spell_list[spell]["name"], str(e)))
         return False
     return True
 
@@ -63,7 +64,7 @@ spell_list = {
         "range": 9,
         "hotkey": "F",
         "spirit": 7,
-        "mana": 400,
+        "mana": 200,
     },
     
     "heal": {

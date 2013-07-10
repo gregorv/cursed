@@ -3,6 +3,7 @@ import random
 import math
 
 import item
+import character
 from registry import NPCRegistry, ItemRegistry
 
 class Dungeon:
@@ -13,6 +14,7 @@ class Dungeon:
         self.max_y = max_y
         self.npc_list = []
         self.item_list = []
+        self.particle_list = []
         
         self.pos_stairs_in = (random.randint(2, max_x-2), random.randint(2, max_y-2))
         if self.level == 1:
@@ -34,15 +36,20 @@ class Dungeon:
         return items
         
     def update(self):
+        for npc in self.npc_list:
+            npc.animate()
+        for p in self.particle_list:
+            p.animate()
+            other = self.collision_detect(p.x, p.y)
+            if isinstance(other, character.Character):
+                p.on_character_touch(other)
+            p.lifetime -= 1
+        self.particle_list = list(filter(lambda p: p.lifetime > 0, self.particle_list))
         killed = list(filter(lambda npc: npc.hp <= 0, self.npc_list))
         for npc in killed:
-            self.game.player.exp += int(npc.exp_loot())
-            self.game.player.apply_exp()
             for item in npc.loot:
                 self.item_list.append((npc.x, npc.y, item))
         self.npc_list = list(filter(lambda npc: npc.hp > 0, self.npc_list))
-        for npc in self.npc_list:
-            npc.animate()
         
     def collision_detect(self, x, y, ignore=None):
         if(x >= self.max_x-1 or y >= self.max_y-1
@@ -61,6 +68,9 @@ class Dungeon:
                 continue
             if x == npc.x and y == npc.y:
                 return npc
+        if(x == self.game.player.x
+           and y == self.game.player.y):
+            return self.game.player
         return None
     
     def get_free_space(self):
@@ -74,14 +84,16 @@ class Dungeon:
         self.populate(20)
     
     def populate(self, n=10):
-        npc_classes = NPCRegistry.upto_dungeonlevel(self.level)
+        select = lambda n: (n.min_dungeon_level<=self.level
+                            and n.max_dungeon_level>=self.level)
+        npc_classes = list(filter(select, NPCRegistry.npc_classes))
         loot_classes = ItemRegistry.names_upto_dungeonlevel(self.level)
         for i in range(n):
             level = int(max(1, random.gauss(self.level, 2.5)))
             cls = random.choice(npc_classes)
             num_loot_items = min(2, max(0, int(random.gauss(0, 2))))
             loot = [random.choice(loot_classes) for i in range(num_loot_items)]
-            npc = cls(self.game, level, loot)
+            npc = cls(self.game, loot)
             npc.x, npc.y = self.get_free_space()
             self.npc_list.append(npc)
     
@@ -101,5 +113,10 @@ class Dungeon:
         scr.addch(self.pos_stairs_out[1], self.pos_stairs_out[0], ">")
         for x, y, item in self.item_list:
             scr.addch(y, x, ItemRegistry.by_name(item).symbol)
+        scr.addch(self.game.player.y,
+                       self.game.player.x,
+                       "@")
         for npc in self.npc_list:
             scr.addch(npc.y, npc.x, npc.symbol)
+        for p in self.particle_list:
+            p.render(scr)

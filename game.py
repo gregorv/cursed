@@ -36,13 +36,17 @@ class Game:
         self.infoscr = curses.newwin(20, 20, 0, 60)
         self.messagescr = curses.newwin(5, 80, 20, 0)
         
+        self.info_override = None
+        
         self.player = character.Player(self)
         self.round = 1
        
         self.quit = False
         
         self.game_screens = {}
-        screen_factory = [gamescr.Dungeon, gamescr.Inventory, gamescr.Spells, gamescr.AnalyzeEnemy]
+        screen_factory = [gamescr.Dungeon, gamescr.Inventory,
+                          gamescr.Spells, gamescr.AnalyzeEnemy,
+                          gamescr.SpellCast]
         for i, scr in enumerate(screen_factory):
             tmp = scr(self, self.mainscr)
             self.game_screens[tmp.name] = tmp
@@ -56,16 +60,16 @@ class Game:
         self.player.hp = min(self.player.max_hp, self.player.hp + self.player.regen)
         old = self.player.mana
         self.player.mana = min(self.player.max_mana, self.player.mana + self.player.mana_regen)
-        self.player.mana_regen_bonus += (self.player.mana - old) * 0.01
+        self.player.mana_regen_bonus += (self.player.mana - old) * 0.005
         self.dungeon.cur_dungeon.update()
         
-    def set_active(self, new_active=""):
+    def set_active(self, new_active="", *args, **kwargs):
         self.active_game_screen.on_deactivate()
         if new_active:
             self.active_game_screen = self.game_screens[new_active]
         else:
             self.active_game_screen = self.dungeon   
-        self.active_game_screen.on_activate()
+        self.active_game_screen.on_activate(*args, **kwargs)
     
     def _draw_info(self):
         self.infoscr.clear()
@@ -94,8 +98,8 @@ class Game:
         
         if self.player.last_enemy:
             self.infoscr.addstr(16, 1,"{e.name}".format(e=self.player.last_enemy))
-            self.infoscr.addstr(18, 1,"HP {e.hp}/{e.max_hp}".format(e=self.player.last_enemy))
-            self.infoscr.addstr(17, 1,"LVL {e.level}".format(e=self.player.last_enemy))
+            self.infoscr.addstr(18, 1,"HP {e.hp:d}/{e.max_hp:d}".format(e=self.player.last_enemy))
+            self.infoscr.addstr(17, 1,"LVL {e.level:d}".format(e=self.player.last_enemy))
         self.infoscr.noutrefresh()
         
     def handle_keypress(self, code, mod):
@@ -106,7 +110,10 @@ class Game:
         return True
         
     def draw(self):
-        self._draw_info()
+        if self.info_override:
+            self.info_override(self.infoscr)
+        else:
+            self._draw_info()
         self.logger.draw()
         self.active_game_screen.draw()
         curses.doupdate()
