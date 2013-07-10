@@ -135,14 +135,14 @@ class PickTarget(BaseScreen):
             return False
         if code == "\t":
             self.game.set_active()
-        elif code == "w": move_cursor = 0, -1
-        elif code == "a": move_cursor = -1, 0
-        elif code == "s": move_cursor = 0, 1
-        elif code == "d": move_cursor = 1, 0
-        elif code == "q": move_cursor = -1, -1
-        elif code == "e": move_cursor = 1, -1
-        elif code == "y": move_cursor = -1, 1
-        elif code == "c": move_cursor = 1, 1
+        elif code in ("w", "j"): move_cursor = 0, -1
+        elif code in ("a", "h"): move_cursor = -1, 0
+        elif code in ("s", "k"): move_cursor = 0, 1
+        elif code in ("d", "l"): move_cursor = 1, 0
+        elif code in ("q", "y"): move_cursor = -1, -1
+        elif code in ("e", "u"): move_cursor = 1, -1
+        elif code in ("y", "b"): move_cursor = -1, 1
+        elif code in ("c", "n"): move_cursor = 1, 1
         else:
             return False
         
@@ -276,23 +276,17 @@ class Dungeon(BaseScreen):
             if code == "i": self.game.set_active("Inventory")
             elif code == "x": self.game.set_active("Spells")
             elif code == "v": self.game.set_active("AnalyzeEnemy")
-            elif code == "b":
-                self.game.player.exp += 1
+            elif code == "o":
+                self.game.player.exp += 1000
                 self.game.player.apply_exp()
-            elif code == "n":
-                self.game.player.exp += 10
-                self.game.player.apply_exp()
-            elif code == "m":
-                self.game.player.exp += 100
-                self.game.player.apply_exp()
-            elif code == "w": move_player = 0, -1
-            elif code == "a": move_player = -1, 0
-            elif code == "s": move_player = 0, 1
-            elif code == "d": move_player = 1, 0
-            elif code == "q": move_player = -1, -1
-            elif code == "e": move_player = 1, -1
-            elif code == "y": move_player = -1, 1
-            elif code == "c": move_player = 1, 1
+            elif code in ("w", "j"): move_player = 0, -1
+            elif code in ("a", "h"): move_player = -1, 0
+            elif code in ("s", "k"): move_player = 0, 1
+            elif code in ("d", "l"): move_player = 1, 0
+            elif code in ("q", "y"): move_player = -1, -1
+            elif code in ("e", "u"): move_player = 1, -1
+            elif code in ("y", "b"): move_player = -1, 1
+            elif code in ("c", "n"): move_player = 1, 1
             elif code == ".": self.game.player_move_finished()
             elif code == "<" and self.level > 1:
                 if((self.game.player.x, self.game.player.y)
