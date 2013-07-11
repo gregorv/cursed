@@ -14,14 +14,19 @@ class Container:
     def add(self, item):
         if isinstance(item, Container):
             item = Container.empty()
-        if not hasattr(item, "__next__"):
+        try:
+            it = iter(item)
+        except TypeError:
             item = [item]
         for i in item:
+            if i.container:
+                i.container.items.remove(i)
             i.container = self
             if isinstance(i, ItemStackable):
                 for it2 in self.items:
                     if it2.type == i.type:
                         it2.count += i.count
+                        break
                 else:
                     self.items.append(i)
             else:
