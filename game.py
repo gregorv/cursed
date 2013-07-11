@@ -64,6 +64,7 @@ class Game:
 
     def run(self):
         while not self.quit:
+            self.map.update()
             self.current_view.draw()
             if not self.player.round_cooldown:
                 curses.doupdate()

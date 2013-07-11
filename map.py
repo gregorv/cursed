@@ -24,6 +24,10 @@ class Map:
             x = random.randint(1, self.size[0]-2)
             y = random.randint(1, self.size[1]-2)
             self.data[y][x] = "a"
+
+    def update(self):
+        self.item_piles = dict(filter(lambda x: len(x[1].items) > 0,
+                                      self.item_piles.items()))
         
     def add_items(self, items, pos):
         if pos not in self.item_piles:
