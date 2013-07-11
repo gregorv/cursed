@@ -34,7 +34,7 @@ class Game:
                 self.play_view = tmp
         self.current_view = self.play_view
         
-    def set_active(self, new_active="", *args, **kwargs):
+    def set_view(self, new_active="", *args, **kwargs):
         self.current_view.on_deactivate()
         if new_active:
             self.current_view = self.views[new_active]

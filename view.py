@@ -18,7 +18,7 @@ class BaseView:
 
     def handle_keypress(self, code, mod):
         if not mod and code == "\t":
-            self.game.set_active()
+            self.game.set_view()
             return True
         return False
         
