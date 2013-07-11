@@ -1,5 +1,6 @@
 
 from entity import Entity
+from item import Inventory
 import math
 
 class Player(Entity):
@@ -14,6 +15,7 @@ class Player(Entity):
             "mana_regen": 1,
             "strength": 1,
         }
+        self.inventory = Inventory
         
     def handle_keypress(self, code, mod):
         move = (0, 0)

@@ -3,7 +3,7 @@ import random
 import math
 import itertools
 
-#import item
+from item import Pile, Container, ItemRegistry
 #import character
 #from registry import NPCRegistry, ItemRegistry
 
@@ -14,7 +14,7 @@ class Map:
         self.size = (int(self.game.config["map"]["width"]),
                      int(self.game.config["map"]["height"]))
         self.npc_list = []
-        self.item_list = []
+        self.item_piles = {}
         self.particle_list = []
         self.stairs = []
         self.data = [["#"]*self.size[0]]
@@ -24,11 +24,17 @@ class Map:
             x = random.randint(1, self.size[0]-2)
             y = random.randint(1, self.size[1]-2)
             self.data[y][x] = "a"
-    
-    #def pop_items(self, pos):
-        #items = [it[2] for it in self.item_list if it[0] == x and it[1] == y]
-        #self.item_list = [it for it in self.item_list if it[0] != x or it[1] != y]
-        #return items
+        
+    def add_items(self, items, pos):
+        if pos not in self.item_piles:
+            self.item_piles[pos] = Pile(self.game, self, pos)
+        self.item_piles[pos].add(items)
+        
+    def pop_items(self, pos):
+        items = Container(self, self.game)
+        if pos in self.item_piles:
+            items.add(self.item_piles[pos])
+        return items
         
     #def update(self):
         #def removeKilledNPCs():
@@ -117,6 +123,7 @@ class Map:
                              and pos[1] >= topleft_offset[1]
                              and pos[0] < scrdim[0]
                              and pos[1] < scrdim[1])
+      
         
         # draw map
         for y in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
@@ -128,5 +135,13 @@ class Map:
                 continue
             x = topleft_offset[1]+max(0, -pos[0]+start_x)
             scr.addstr(y, x, "".join(self.data[real_y][start_x:end_x]))
+        
+        # draw item piles
+        for pos, pile in self.item_piles.items():
+            scrcoord = coord(pos)
+            if in_scr(scrcoord):
+                scr.addch(scrcoord[0], scrcoord[1],
+                           pile.render())
+            
         scr.addch(scrmid[0], scrmid[1], "@")
         
