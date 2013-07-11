@@ -1,45 +1,23 @@
 
+from item import comestibles
+from item.itembase import ItemRegistry, Item, ItemStackable, ItemWieldable, ItemComestible
 
-class Item:
-    def __init__(self, game):
-        self.game = game
-        self.type = self.__class__.__name__
-        self.name = self.__class__.name
-        self.weight = self.__class__.weight
-        self.value = self.__class__.value
-        self.symbol = self.__class__.symbol
-        self.used_up = False
-        self.container = None
-        
-    def on_ingest(self, ingester):
-        pass
-    
-    def on_read(self, reader):
-        pass
-
-class ItemStackable:
-    def __init__(self):
-        self.count = 1
-        
-    def __getattr__(self, name):
-        if name == "weight":
-            return self.count * self.__class__.weight
-        else:
-            return object.__getattr__(self, name)
-        
-
-class ItemWieldable:
-    def on_wield_attack(self, wielder, target):
-        return False
-    
 class Container:
     def __init__(self, game):
         self.items = []
+        
+    def empty(self):
+        i = list(map(lambda x: setattr(x, "container", None), self.items))
+        self.items.remove(i)
+        return i
     
     def add(self, item):
+        if isinstance(item, Container):
+            item = Container.empty()
         if not hasattr(item, "__next__"):
             item = [item]
         for i in item:
+            i.container = self
             if isinstance(i, ItemStackable):
                 for it2 in self.items:
                     if it2.type == i.type:
@@ -60,6 +38,7 @@ class Inventory(Container):
 
 class Pile(Container):
     def __init__(self, game, map, pos):
+        Container.__init__(self, game)
         self.map = map
         self.pos = pos
     
