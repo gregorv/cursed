@@ -1,6 +1,6 @@
 
 from item import comestibles
-from item.itembase import ItemRegistry, Item, ItemStackable, ItemWieldable, ItemComestible
+from item.itembase import ItemRegistry, Item, ItemStackable, ItemWieldable
 
 class Container:
     def __init__(self, game):

@@ -30,6 +30,7 @@ class Item(metaclass = ItemRegistry):
     def on_read(self, reader):
         pass
 
+
 class ItemStackable:
     def __init__(self):
         self.count = 1
@@ -39,16 +40,10 @@ class ItemStackable:
             return self.count * self.__class__.weight
         else:
             return object.__getattr__(self, name)
-        
+
+class ItemModifyable:
+    pass
 
 class ItemWieldable:
     def on_wield_attack(self, wielder, target):
         return False
-
-
-class ItemComestible:
-    def __init__(self):
-        self.heal = self.__class__.heal
-    
-    def on_ingest(self, ingester):
-        ingester.heal(self.heal)

@@ -1,7 +1,13 @@
 
-from .itembase import Item, ItemStackable, ItemComestible
+from .itembase import Item, ItemStackable
 
-class Apple(Item, ItemStackable, ItemComestible):
+class Comestible(Item, ItemStackable):
+    symbol = "%"
+    
+    def on_ingest(self):
+        pass
+
+class Apple(Item, ItemStackable):
     name = "Apple"
     weight = 1
     value = 5
