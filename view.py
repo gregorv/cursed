@@ -249,4 +249,5 @@ class Play(BaseView):
         self.scr.clear()
         yx = self.scr.getmaxyx()
         self.game.map.render(self.scr, (0, 0), (yx[0]-3, yx[1]))
+        self.scr.addstr(yx[0]-2, 1, "Round {0:.1f}".format(self.game.round/10))
         self.scr.noutrefresh()

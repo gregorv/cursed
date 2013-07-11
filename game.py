@@ -23,6 +23,8 @@ class Game:
         
         self.map = Map(self, "1")
         
+        self.round = 0
+        
         self.views = {}
         screen_factory = [view.Play]
         for i, scr in enumerate(screen_factory):
@@ -46,15 +48,31 @@ class Game:
         else:
             return self.current_view.handle_keypress(code, mod)
         return True
+    
+    def perform_microround(self):
+        self.round += 1
+        self.player.round_cooldown -= 1
+        for npc in self.map.npc_list:
+            if npc.npc_list == 0:
+                npc.animate()
+            else:
+                npc.round_cooldown -= 1
+        # UPDATE PARTICLES
+        # DEATH CONDITION
+        # REGENERATION
+        
 
     def run(self):
         while not self.quit:
             self.current_view.draw()
-            curses.doupdate()
-            mod = False
-            code = self.stdscr.getkey()
-            if code == "\x1b":
-                mod = True
-                while code == "\x1b":
-                    code = self.stdscr.getkey()
-            self.handle_keypress(code, mod)
+            if not self.player.round_cooldown:
+                curses.doupdate()
+                mod = False
+                code = self.stdscr.getkey()
+                if code == "\x1b":
+                    mod = True
+                    while code == "\x1b":
+                        code = self.stdscr.getkey()
+                self.handle_keypress(code, mod)
+            else:
+                self.perform_microround()

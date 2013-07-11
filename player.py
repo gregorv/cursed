@@ -1,5 +1,6 @@
 
 from entity import Entity
+import math
 
 class Player(Entity):
     def __init__(self, game):
@@ -32,6 +33,7 @@ class Player(Entity):
            detect = self.game.map.collision_detect(new)
            if detect is None:
                self.pos = new
+               self.set_round_cooldown(math.sqrt((10*move[0])**2 + (10*move[1])**2))
 
 character_skills = (
     ("max_hp", 20, "MHP", "Maximum HP"),
