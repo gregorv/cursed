@@ -34,6 +34,7 @@ class Map:
         items = Container(self, self.game)
         if pos in self.item_piles:
             items.add(self.item_piles[pos])
+            del self.item_piles[pos]
         return items
         
     #def update(self):

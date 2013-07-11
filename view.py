@@ -235,7 +235,50 @@ class BaseView:
             
 #class BaseMapView(BaseView):
     #def __init__(self, game, scr):
+
+class ItemView(BaseView):
+    def __init__(self, game, scr):
+        BaseView.__init__(self, game, scr)
+        self.item_container = None
+        self.scroll_offset = 0
+        self.item_view_height = self.max_y-5
+    
+    def on_activate(self, container):
+        self.item_container = container
+        self.selection = []
         
+    def render_items(self):
+        items = list(sorted(self.item_container.items))
+        left = True
+        y = self.scroll_offset
+        for item in items[self.scroll_offset*2
+                          :(self.scroll_offset+self.item_view_height)*2]:
+            self.scr.addstr(y,
+                            0 if left else self.max_x//2,
+                            "{3}{0}{1}{2}".format(
+                                item.hotkey,
+                                "+" if item in self.selection else "-",
+                                item.name,
+                                "{0:4d}".format(item.count)
+                                if hasattr(item, "count")
+                                else ""
+                                )
+                            )
+            left = not left
+            if left:
+                y += 1
+            
+        
+    def handle_keypress(self, code, mod):
+        return True
+        
+    def draw(self):
+        self.scr.clear()
+        self.render_items()
+        self.scr.noutrefresh()
+
+class Inventory(ItemView):
+    pass
 
 class Play(BaseView):
     def __init__(self, game, scr):
