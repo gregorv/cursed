@@ -248,9 +248,10 @@ class ItemView(BaseView):
         self.selection = []
         
     def render_items(self):
-        items = list(sorted(self.item_container.items))
+        items = list(sorted(self.item_container.items,
+                            key= lambda x: x.name))
         left = True
-        y = self.scroll_offset
+        y = self.scroll_offset+1
         for item in items[self.scroll_offset*2
                           :(self.scroll_offset+self.item_view_height)*2]:
             self.scr.addstr(y,
@@ -259,9 +260,9 @@ class ItemView(BaseView):
                                 item.hotkey,
                                 "+" if item in self.selection else "-",
                                 item.name,
-                                "{0:4d}".format(item.count)
+                                "{0:4d}x ".format(item.count)
                                 if hasattr(item, "count")
-                                else ""
+                                else "     "
                                 )
                             )
             left = not left
@@ -270,6 +271,16 @@ class ItemView(BaseView):
             
         
     def handle_keypress(self, code, mod):
+        if self.game.keymap("view.itemview.scroll_up", code, mod):
+            self.scroll_offset = max(0, self.scroll_offset - 1)
+        elif self.game.keymap("view.itemview.scroll_down", code, mod):
+            self.scroll_offset = min(self.scroll_offset + 1,
+                                     max(0,
+                                         len(self.item_container) - self.item_view_height
+                                         )
+                                     )
+        else:
+            return BaseView.handle_keypress(self, code, mod)
         return True
         
     def draw(self):
