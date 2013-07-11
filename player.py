@@ -4,7 +4,7 @@ from entity import Entity
 class Player(Entity):
     def __init__(self, game):
         Entity.__init__(self, game)
-
+        self.name = "Adventurer"
         self.mana = 0
         self.char_skills = {
             "max_hp": 20,
