@@ -23,6 +23,7 @@ class Item(metaclass = ItemRegistry):
         self.symbol = self.__class__.symbol
         self.used_up = False
         self.container = None
+        self.hotkey = None
         
     def on_ingest(self, ingester):
         pass
