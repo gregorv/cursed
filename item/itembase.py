@@ -35,11 +35,11 @@ class ItemStackable:
     def __init__(self):
         self.count = 1
         
-    def __getattr__(self, name):
+    def __getattribute__(self, name):
         if name == "weight":
             return self.count * self.__class__.weight
         else:
-            return object.__getattr__(self, name)
+            return object.__getattribute__(self, name)
 
 class ItemModifyable:
     pass
