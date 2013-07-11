@@ -26,7 +26,7 @@ class Game:
         self.round = 0
         
         self.views = {}
-        screen_factory = [view.Play]
+        screen_factory = [view.Play, view.Inventory, view.PickupItems]
         for i, scr in enumerate(screen_factory):
             tmp = scr(self, self.stdscr)
             self.views[tmp.name] = tmp
@@ -34,7 +34,7 @@ class Game:
                 self.play_view = tmp
         self.current_view = self.play_view
         
-    def set_active(self, new_active="", *args, **kwargs):
+    def set_view(self, new_active="", *args, **kwargs):
         self.current_view.on_deactivate()
         if new_active:
             self.current_view = self.views[new_active]
@@ -64,6 +64,7 @@ class Game:
 
     def run(self):
         while not self.quit:
+            self.map.update()
             self.current_view.draw()
             if not self.player.round_cooldown:
                 curses.doupdate()

@@ -1,5 +1,6 @@
 
 from entity import Entity
+from item import Inventory
 import math
 
 class Player(Entity):
@@ -14,6 +15,7 @@ class Player(Entity):
             "mana_regen": 1,
             "strength": 1,
         }
+        self.inventory = Inventory(self.game)
         
     def handle_keypress(self, code, mod):
         move = (0, 0)
@@ -25,6 +27,10 @@ class Player(Entity):
         elif self.game.keymap("player.nw", code, mod): move = (-1, -1)
         elif self.game.keymap("player.se", code, mod): move = (1, 1)
         elif self.game.keymap("player.sw", code, mod): move = (-1, 1)
+        elif self.game.keymap("player.pickup", code, mod):
+            if self.pos in self.game.map.item_piles:
+                self.game.set_view("PickupItems",
+                                   self.game.map.item_piles[self.pos])
         else:
             return False
         
@@ -36,10 +42,10 @@ class Player(Entity):
                self.set_round_cooldown(math.sqrt((10*move[0])**2 + (10*move[1])**2))
 
 character_skills = (
-    ("max_hp", 20, "MHP", "Maximum HP"),
-    ("max_mana", 20, "MMA", "Maximum Mana"),
-    ("hp_regen", 1, "RGN", "Regeneration of HP per round"),
-    ("mana_regen", 1, "MRG", "Regeneration of Mana per round"),
-    ("strength", 1, "STR", "Strength of physical attacks"),
-    ("spell_casting", 1, "")
+    ("max_hp", 20, "Max HP", "Maximum HP"),
+    ("max_mana", 20, "Max Mana", "Maximum Mana"),
+    ("hp_regen", 1, "HP Regen", "Regeneration of HP per round"),
+    ("mana_regen", 1, "Mana Rege", "Regeneration of Mana per round"),
+    ("strength", 1, "Strength", "Strength of physical attacks"),
+    ("spell_casting", 1, "Spell Casting")
 )

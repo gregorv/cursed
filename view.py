@@ -18,7 +18,7 @@ class BaseView:
 
     def handle_keypress(self, code, mod):
         if not mod and code == "\t":
-            self.game.set_active()
+            self.game.set_view()
             return True
         return False
         
@@ -235,7 +235,94 @@ class BaseView:
             
 #class BaseMapView(BaseView):
     #def __init__(self, game, scr):
+
+class ItemView(BaseView):
+    def __init__(self, game, scr):
+        BaseView.__init__(self, game, scr)
+        self.item_container = None
+        self.scroll_offset = 0
+        self.item_view_height = self.max_y-5
+    
+    def on_activate(self, container):
+        self.item_container = container
+        self.selection = []
         
+    def render_items(self):
+        items = list(sorted(self.item_container.items,
+                            key= lambda x: x.name))
+        left = True
+        y = self.scroll_offset+1
+        for item in items[self.scroll_offset*2
+                          :(self.scroll_offset+self.item_view_height)*2]:
+            self.scr.addstr(y,
+                            0 if left else self.max_x//2,
+                            "{3}{0}{1}{2}".format(
+                                item.hotkey,
+                                "+" if item in self.selection else "-",
+                                item.name,
+                                "{0:4d}x ".format(item.count)
+                                if hasattr(item, "count")
+                                else "     "
+                                )
+                            )
+            left = not left
+            if left:
+                y += 1
+            
+        
+    def handle_keypress(self, code, mod):
+        if self.game.keymap("view.itemview.scroll_up", code, mod):
+            self.scroll_offset = max(0, self.scroll_offset - 1)
+        elif self.game.keymap("view.itemview.scroll_down", code, mod):
+            self.scroll_offset = min(self.scroll_offset + 1,
+                                     max(0,
+                                         len(self.item_container) - self.item_view_height
+                                         )
+                                     )
+        else:
+            return BaseView.handle_keypress(self, code, mod)
+        return True
+        
+    def draw(self):
+        self.scr.clear()
+        self.render_items()
+        self.scr.noutrefresh()
+
+class Inventory(ItemView):
+    def draw(self):
+        self.scr.clear()
+        self.scr.addstr(0, 10, "Inventory", curses.A_BOLD)
+        self.render_items()
+        self.scr.noutrefresh()
+
+class PickupItems(ItemView):
+    def handle_keypress(self, code, mod):
+        if not mod:
+            for i in self.item_container.items:
+                if i.hotkey != code:
+                    continue
+                if i in self.selection:
+                    self.selection.remove(i)
+                else:
+                    self.selection.append(i)
+        if self.game.keymap("view.pickupitems.select_all", code, mod):
+            if len(self.selection) == len(self.item_container.items):
+                self.selection = []
+            else:
+                self.selection = list(self.item_container.items)
+        elif self.game.keymap("view.pickupitems.pick", code, mod):
+            self.game.player.inventory.add(self.selection)
+            self.game.set_view()
+        else:
+            return ItemView.handle_keypress(self, code, mod)
+        return False
+
+    def draw(self):
+        self.scr.clear()
+        self.scr.addstr(0, 10, "Select Items to pick up", curses.A_BOLD)
+        self.render_items()
+        self.scr.addstr(self.max_y-1, 1, "^a select everything   , pick selected items", curses.A_BOLD)
+        self.scr.noutrefresh()
 
 class Play(BaseView):
     def __init__(self, game, scr):
@@ -243,6 +330,12 @@ class Play(BaseView):
     
     def handle_keypress(self, code, mod):
         if self.game.player.handle_keypress(code, mod):
+            return True
+        else:
+            if self.game.keymap("view.play.inventory", code, mod):
+                self.game.set_view("Inventory", self.game.player.inventory)
+            else:
+                return False
             return True
         
     def draw(self):
