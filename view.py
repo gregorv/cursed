@@ -278,7 +278,40 @@ class ItemView(BaseView):
         self.scr.noutrefresh()
 
 class Inventory(ItemView):
-    pass
+    def draw(self):
+        self.scr.clear()
+        self.scr.addstr(0, 10, "Inventory", curses.A_BOLD)
+        self.render_items()
+        self.scr.noutrefresh()
+
+class PickupItems(ItemView):
+    def handle_keypress(self, code, mod):
+        if not mod:
+            for i in self.item_container.items:
+                if i.hotkey != code:
+                    continue
+                if i in self.selection:
+                    self.selection.remove(i)
+                else:
+                    self.selection.append(i)
+        if self.game.keymap("view.pickupitems.select_all", code, mod):
+            if len(self.selection) == len(self.item_container.items):
+                self.selection = []
+            else:
+                self.selection = list(self.item_container.items)
+        elif self.game.keymap("view.pickupitems.pick", code, mod):
+            self.game.player.inventory.add(self.selection)
+            self.game.set_view()
+        else:
+            return ItemView.handle_keypress(self, code, mod)
+        return False
+
+    def draw(self):
+        self.scr.clear()
+        self.scr.addstr(0, 10, "Select Items to pick up", curses.A_BOLD)
+        self.render_items()
+        self.scr.addstr(self.max_y-1, 1, "^a select everything   , pick selected items", curses.A_BOLD)
+        self.scr.noutrefresh()
 
 class Play(BaseView):
     def __init__(self, game, scr):
@@ -286,6 +319,12 @@ class Play(BaseView):
     
     def handle_keypress(self, code, mod):
         if self.game.player.handle_keypress(code, mod):
+            return True
+        else:
+            if self.game.keymap("view.play.inventory", code, mod):
+                self.game.set_view("Inventory", self.game.player.inventory)
+            else:
+                return False
             return True
         
     def draw(self):

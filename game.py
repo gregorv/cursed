@@ -26,7 +26,7 @@ class Game:
         self.round = 0
         
         self.views = {}
-        screen_factory = [view.Play, view.Inventory]
+        screen_factory = [view.Play, view.Inventory, view.PickupItems]
         for i, scr in enumerate(screen_factory):
             tmp = scr(self, self.stdscr)
             self.views[tmp.name] = tmp
