@@ -15,7 +15,7 @@ class Player(Entity):
             "mana_regen": 1,
             "strength": 1,
         }
-        self.inventory = Inventory
+        self.inventory = Inventory(self.game)
         
     def handle_keypress(self, code, mod):
         move = (0, 0)
