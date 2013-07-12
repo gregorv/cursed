@@ -13,7 +13,8 @@ class ItemRegistry(Registry):
                and "value" in dict
                and "symbol" in dict)
 
-class Item(metaclass = ItemRegistry):
+class Item():
+    __metaclass__ = ItemRegistry
     def __init__(self, game):
         self.game = game
         self.type = self.__class__.__name__
