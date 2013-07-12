@@ -31,7 +31,7 @@ class Map:
     def _update_discovery(self):
         self._visible_area = self.get_visible_area(self.game.player.pos, 8)
         for x,y in self._visible_area:
-            self.discovered[y][x] = self.data_floor[y][x]
+            self.discovered[y][x] = self.data[y][x]
 
     def get_los_fields(self, start, end):
         """
@@ -62,7 +62,7 @@ class Map:
         """
         for pos in self.get_los_fields(start, end):
             yield pos
-            if self.data_floor[pos[1]][pos[0]] == "#":
+            if self.data[pos[1]][pos[0]] == "#":
                 break
 
     def get_field_circle(self, center, radius):
@@ -132,7 +132,7 @@ class Map:
         if(pos[0] >= self.size[0] or pos[1] >= self.size[1]
            or pos[0] < 0 or pos[1] < 0):
             return "dungeon"
-        if self.data_floor[pos[1]][pos[0]] == "#":
+        if self.data[pos[1]][pos[0]] == "#":
             return "dungeon"
         #if(self.pos_stairs_in
            #and (x == self.pos_stairs_in[0]
@@ -159,9 +159,9 @@ class Map:
                 return (x, y)
         
     def generate(self):
-        self.data_floor = [["#"]*self.size[0]]
-        self.data_floor.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
-        self.data_floor.append(["#"]*self.size[0])
+        self.data = [["#"]*self.size[0]]
+        self.data.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
+        self.data.append(["#"]*self.size[0])
     
     def populate(self, n=10):
         pass
@@ -277,13 +277,38 @@ class Map:
         
 class RandomDungeon(Map):
     def generate(self):
-        self.data_floor = [["#"]*self.size[0]]
-        self.data_floor.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
-        self.data_floor.append(["#"]*self.size[0])
-        for i in range(600):
-            x = random.randint(4, self.size[0]-4)
-            y = random.randint(4, self.size[1]-4)
-            self.data_floor[y][x] = "#"
-            self.data_floor[y+1][x] = "#"
-            self.data_floor[y][x+1] = "#"
-            self.data_floor[y+1][x+1] = "#"
+        self.data = [["#"]*(self.size[0]) for i in range(self.size[1])]
+        
+        corridors = []
+        
+        def square_room(center):
+            shape = random.randint(0, 2)
+            size = (random.randint(3, 5),
+                    random.randint(3, 5))
+            for x,y in itertools.product(range(center[0]-size[0],
+                                                center[0]+size[0]),
+                                            range(center[1]-size[1],
+                                                center[1]+size[1])):
+                self.data[y][x] = "."
+        def circular_room(center):
+            shape = random.randint(0, 2)
+            size = random.randint(3, 5)
+            for radius in range(0, size+1):
+                for x, y in self.get_field_circle(center, radius):
+                    self.data[y][x] = "."
+
+        for room_pos in [(5, 5)]:
+            shape = random.randint(0, 2)
+            size = (random.randint(3, 5),
+                    random.randint(3, 5))
+            if shape == 0:
+                for x,y in itertools.product(range(room_pos[0]-size[0],
+                                                   room_pos[0]+size[0]),
+                                             range(room_pos[1]-size[1],
+                                                   room_pos[1]+size[1])):
+                    self.data[y][x] = "."
+            else:
+                for radius in range(0, size[0]+1):
+                    for x, y in self.get_field_circle(room_pos, radius):
+                        self.data[y][x] = "."
+

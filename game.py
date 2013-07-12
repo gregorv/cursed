@@ -37,6 +37,7 @@ class Game:
         
         self.map = RandomDungeon(self, "1", (200, 200))
         self.map.generate()
+        self.player.pos = self.map.get_free_space()
         
         self.round = 0
         
