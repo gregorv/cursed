@@ -19,6 +19,7 @@ class Map:
         self.stairs = []
         self.data = []
         self.discovered = [[" "]*self.size[0] for i in range(self.size[1])]
+        self._visible_area = []
 
     def update(self):
         self._update_discovery()
@@ -26,8 +27,8 @@ class Map:
                                       self.item_piles.items()))
 
     def _update_discovery(self):
-        visible = self.get_visible_area(self.game.player.pos, 8)
-        for x,y in visible:
+        self._visible_area = self.get_visible_area(self.game.player.pos, 8)
+        for x,y in self._visible_area:
             self.discovered[y][x] = self.data[y][x]
 
     def get_los_fields(self, start, end):
@@ -202,16 +203,14 @@ class Map:
                        "".join(self.discovered[real_y][start_x:end_x]),
                        curses.A_NORMAL)
 
-        visible_area = list(self.get_visible_area(self.game.player.pos, 8))
-
-        for p in map(coord, visible_area):
+        for p in map(coord, self._visible_area):
             if in_scr(p):
                 scr.chgat(p[0], p[1], 1, curses.A_BOLD)
         # draw item piles
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
             if in_scr(scrcoord):
-                if(pos not in visible_area
+                if(pos not in self._visible_area
                    and self.discovered[pos[1]][pos[0]] == " "):
                     continue
                 scr.addch(scrcoord[0], scrcoord[1],
@@ -220,7 +219,7 @@ class Map:
         # draw NPCs (only if in view)
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
-            if in_scr(scrcoord) and pos in visible_area:
+            if in_scr(scrcoord) and pos in self._visible_area:
                 scr.addch(scrcoord[0], scrcoord[1],
                            pile.render())
         if in_scr(player_pos):
