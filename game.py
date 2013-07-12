@@ -133,22 +133,26 @@ class Game:
         return True
     
     def perform_microround(self):
+        redraw = False
         self.round += 1
         self.player.round_cooldown -= 1
         for npc in self.map.npc_list:
             if npc.npc_list == 0:
                 npc.animate()
+                redraw = True
             else:
                 npc.round_cooldown -= 1
         # UPDATE PARTICLES
         # DEATH CONDITION
         # REGENERATION
-        
+        return redraw
 
     def run(self):
+        redraw = True
         while not self.quit:
-            self.map.update()
-            self.current_view.draw()
+            if redraw or not self.player.round_cooldown:
+                self.map.update()
+                self.current_view.draw()
             if not self.player.round_cooldown:
                 curses.doupdate()
                 mod = False
@@ -157,6 +161,6 @@ class Game:
                     mod = True
                     while code == "\x1b":
                         code = self.stdscr.getkey()
-                self.handle_keypress(code, mod)
+                redraw = self.handle_keypress(code, mod)
             else:
-                self.perform_microround()
+                redraw = self.perform_microround()

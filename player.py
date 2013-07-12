@@ -40,6 +40,7 @@ class Player(Entity):
            if detect is None:
                self.pos = new
                self.set_round_cooldown(math.sqrt((10*move[0])**2 + (10*move[1])**2))
+        return True
 
 character_skills = (
     ("max_hp", 20, "Max HP", "Maximum HP"),
