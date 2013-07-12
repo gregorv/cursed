@@ -10,6 +10,8 @@ import traceback
 from game import Game
 
 def start_game(stdscr, args):
+    curses.cbreak()
+    curses.curs_set(0)
     game = Game(stdscr, extra_config=args["c"])
     if "u" in args:
         game.player.name = args["u"]
