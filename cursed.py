@@ -32,7 +32,7 @@ if __name__ == "__main__":
     args = vars(parse.parse_args())
     try:
         curses.wrapper(start_game, args)
-    except Exception as e:
+    except Exception, e:
         if "t" in args and args["t"]:
             with open(args["t"], "w") as f:
                 f.write(traceback.format_exc())
