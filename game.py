@@ -57,8 +57,17 @@ class Game:
         attributes = dict((key[2:].lower(), val)
                   for key, val in curses.__dict__.items()
                   if key.startswith("A_"))
+        ansi_attributes = {
+            "normal": 0,
+            "bold": 1,
+            "dim": 2,
+            "underline": 3,
+            "blink": 5,
+            "reverse": 7,
+        }
         
         self.use_color = False
+        self.quick_map_draw = False
         if("use_colors" in self.config["style"]
            and self.config["style"]["use_colors"].lower()
            == "true"):
@@ -66,10 +75,15 @@ class Game:
                 curses.start_color()
                 for i in range(1, 64):
                     curses.init_pair(i, i%8, i//8)
+        if("quick_map_draw" in self.config["style"]
+           and self.config["style"]["quick_map_draw"].lower()
+           == "true"):
+            self.quick_map_draw = True
         self.style = {}
-        f = open("test", "w")
+        self.ansi_style = {}
         for key, val in self.config["style"].items():
-            if key != "use_colors":
+            if(key != "use_colors" and
+               key != "quick_map_draw"):
                 attr = ""
                 if "," in val:
                     color, attr = map(str.strip, val.split(","))
@@ -90,7 +104,17 @@ class Game:
                     self.style[key] += attributes[a]
                 if self.use_color:
                     self.style[key] += curses.color_pair(fg_color + 8*bg_color)
-                f.write("%s %s %s %s: %i %i %i\n"%(key, val, color, attr, fg_color, bg_color, self.style[key]))
+                ansi_at = 0
+                try:
+                    ansi_at = attr.split()[0]
+                    ansi_at = ansi_attributes[ansi_at]
+                except KeyError:
+                    pass
+                except IndexError:
+                    pass
+                self.ansi_style[key] = "\033[{0};{1};{2}m".format(ansi_at,
+                                                                  30+fg_color,
+                                                                  40+bg_color)
                 
         
     def set_view(self, new_active="", *args, **kwargs):
