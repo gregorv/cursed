@@ -8,11 +8,20 @@ from player import Player
 from keymapping import Keymapping
 
 class Game:
-    def __init__(self, stdscr):
+    def __init__(self, stdscr, extra_config=None):
         self.stdscr = stdscr
         self.stdscr.resize(25, 80)
         self.config = configparser.ConfigParser()
         self.config.read("cursed.cfg")
+        if extra_config:
+            allowed_sections = ["keymap"]
+            cfg = configparser.ConfigParser()
+            cfg.read(extra_config)
+            for sec in allowed_sections:
+                if sec not in cfg.sections():
+                    continue
+                for key, val in cfg.items(sec):
+                    self.config.set(sec, key, val)
         
         self.keymap = Keymapping()
         self.keymap.import_mapping(self.config["keymap"])

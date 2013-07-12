@@ -16,11 +16,9 @@ def start_game(stdscr, args):
     curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED);
     curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_YELLOW);
     curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_BLUE);
-    game = Game(stdscr)
+    game = Game(stdscr, extra_config=args["c"])
     if "u" in args:
         game.player.name = args["u"]
-    if "c" in args and args["c"]:
-        game.config.read(args["c"])
     game.run()
 
 if __name__ == "__main__":
