@@ -2,28 +2,21 @@
 import random
 import math
 import itertools
+import curses
 
 from item import Pile, Container, ItemRegistry
 #import character
 #from registry import NPCRegistry, ItemRegistry
 
 class Map:
-    def __init__(self, game, name):
+    def __init__(self, game, name, size):
         self.game = game
         self.name = name
-        self.size = (int(self.game.config["map"]["width"]),
-                     int(self.game.config["map"]["height"]))
+        self.size = size
         self.npc_list = []
         self.item_piles = {}
         self.particle_list = []
         self.stairs = []
-        self.data = [["#"]*self.size[0]]
-        self.data.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
-        self.data.append(["#"]*self.size[0])
-        for i in range(200):
-            x = random.randint(1, self.size[0]-2)
-            y = random.randint(1, self.size[1]-2)
-            self.data[y][x] = "a"
 
     def update(self):
         self.item_piles = dict(filter(lambda x: len(x[1].items) > 0,
@@ -90,45 +83,40 @@ class Map:
             if self.collision_detect((x, y)) is None:
                 return (x, y)
         
-    #def generate(self):
-        #self.populate(20)
+    def generate(self):
+        self.data = [["#"]*self.size[0]]
+        self.data.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
+        self.data.append(["#"]*self.size[0])
     
-    #def populate(self, n=10):
-        #select = lambda n: (n.min_dungeon_level<=self.level
-                            #and n.max_dungeon_level>=self.level)
-        #npc_classes = list(filter(select, NPCRegistry.npc_classes))
-        #loot_classes = ItemRegistry.names_upto_dungeonlevel(self.level)
-        #for i in range(n):
-            #level = int(max(1, random.gauss(self.level, 2.5)))
-            #cls = random.choice(npc_classes)
-            #num_loot_items = min(2, max(0, int(random.gauss(0, 2))))
-            #loot = [random.choice(loot_classes) for i in range(num_loot_items)]
-            #npc = cls(self.game, loot)
-            #npc.x, npc.y = self.get_free_space()
-            #self.npc_list.append(npc)
+    def populate(self, n=10):
+        pass
     
-    #def on_enter(self, origin):
-        #if len(self.npc_list) < 20:
-            #self.populate(3)
-        #for npc in self.npc_list:
-            #npc.last_know_player_pos = None
+    def on_enter(self, origin):
+        for npc in self.npc_list:
+            npc.last_know_player_pos = None
     
-    #def on_exit(self, target):
-        #pass
+    def on_exit(self, target):
+        pass
         
-    def render(self, scr, topleft_offset, scrdim):
-        player_pos = self.game.player.pos
+    def render(self, scr, topleft_offset, scrdim, center=None):
+        if center is None:
+            center = self.game.player.pos
         scrmid = (scrdim[0]//2 + topleft_offset[0],
                   scrdim[1]//2 + topleft_offset[1])
-        coord = lambda pos: (pos[1]-player_pos[1]+scrmid[0],
-                             pos[0]-player_pos[0]+scrmid[1])
-        revcoord = lambda pos: (pos[1]+player_pos[0]-scrmid[1],
-                             pos[0]+player_pos[1]-scrmid[0])
+        # word coord -> screen coord
+        coord = lambda pos: (pos[1]-center[1]+scrmid[0],
+                             pos[0]-center[0]+scrmid[1])
+        # screen coord > wordl coord
+        revcoord = lambda pos: (pos[1]+center[0]-scrmid[1],
+                             pos[0]+center[1]-scrmid[0])
+
+        player_pos = coord(self.game.player.pos)
+
         in_scr = lambda pos:(pos[0] >= topleft_offset[0]
                              and pos[1] >= topleft_offset[1]
                              and pos[0] < scrdim[0]
                              and pos[1] < scrdim[1])
-      
+        in_view = lambda pos:((pos[0]-player_pos[0])**2 + (pos[1]-player_pos[1])**2 < 8**2)
         
         # draw map
         for y in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
@@ -139,14 +127,30 @@ class Map:
             if pos[1] < 0 or pos[1] >= self.size[1]:
                 continue
             x = topleft_offset[1]+max(0, -pos[0]+start_x)
-            scr.addstr(y, x, "".join(self.data[real_y][start_x:end_x]))
-        
+            scr.addstr(y, x,
+                       "".join(self.data[real_y][start_x:end_x]),
+                       curses.A_NORMAL)
+
+        for y, x in itertools.product(range(player_pos[0]-7, player_pos[0]+7),
+                                    range(player_pos[1]-7, player_pos[1]+7)):
+            if in_scr((y, x)) and in_view((y, x)):
+                scr.chgat(y, x, 1, curses.A_BOLD)
         # draw item piles
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
             if in_scr(scrcoord):
                 scr.addch(scrcoord[0], scrcoord[1],
+                           pile.render(),
+                           curses.A_DIM)
+        # draw NPCs (only if in view)
+        for pos, pile in self.item_piles.items():
+            scrcoord = coord(pos)
+            if in_scr(scrcoord) and in_view(scrcoord):
+                scr.addch(scrcoord[0], scrcoord[1],
                            pile.render())
-            
-        scr.addch(scrmid[0], scrmid[1], "@")
+        if in_scr(player_pos):
+            scr.addch(player_pos[0], player_pos[1], "@")
         
+class RandomDungeon(Map):
+    def generate(self):
+        self.data = []
