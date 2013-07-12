@@ -1,3 +1,4 @@
+from __future__ import division
 
 from entity import Entity
 from item import Inventory

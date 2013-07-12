@@ -1,3 +1,4 @@
+from __future__ import division
 
 import curses
 from map import Map
