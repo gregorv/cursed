@@ -19,8 +19,8 @@ def start_game(stdscr, args):
     game = Game(stdscr)
     if "u" in args:
         game.player.name = args["u"]
-    if "c" in args:
-        game.config.read("c")
+    if "c" in args and args["c"]:
+        game.config.read(args["c"])
     game.run()
 
 if __name__ == "__main__":
@@ -35,7 +35,7 @@ if __name__ == "__main__":
     try:
         curses.wrapper(start_game, args)
     except Exception as e:
-        if "t" in args:
+        if "t" in args and args["t"]:
             with open(args["t"], "w") as f:
                 f.write(traceback.format_exc())
         else:
