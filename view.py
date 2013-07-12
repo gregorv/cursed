@@ -324,6 +324,37 @@ class PickupItems(ItemView):
         self.scr.addstr(self.max_y-1, 1, "^a select everything   , pick selected items", curses.A_BOLD)
         self.scr.noutrefresh()
 
+class MapOverview(BaseView):
+    def __init__(self, game, scr):
+        BaseView.__init__(self, game, scr)
+        self.pos = None
+
+    def on_activate(self):
+        self.pos = self.game.player.pos
+
+    def handle_keypress(self, code, mod):
+        move = None
+        if self.game.keymap("view.mapoverview.w", code, mod): move = (-1, 0)
+        elif self.game.keymap("view.mapoverview.e", code, mod): move = (1, 0)
+        elif self.game.keymap("view.mapoverview.n", code, mod): move = (0, -1)
+        elif self.game.keymap("view.mapoverview.s", code, mod): move = (0, 1)
+        elif self.game.keymap("view.mapoverview.ne", code, mod): move = (1, -1)
+        elif self.game.keymap("view.mapoverview.nw", code, mod): move = (-1, -1)
+        elif self.game.keymap("view.mapoverview.se", code, mod): move = (1, 1)
+        elif self.game.keymap("view.mapoverview.sw", code, mod): move = (-1, 1)
+        else:
+            return BaseView.handle_keypress(self, code, mod)
+        if move:
+            self.pos = (self.pos[0]+move[0], self.pos[1]+move[1])
+        return True
+
+    def draw(self):
+        self.scr.clear()
+        yx = self.scr.getmaxyx()
+        self.game.map.render(self.scr, (0, 0), (yx[0]-3, yx[1]), center=self.pos)
+        self.scr.addstr(yx[0]-2, 1, "Round {0:.1f}".format(self.game.round/10))
+        self.scr.noutrefresh()
+
 class Play(BaseView):
     def __init__(self, game, scr):
         BaseView.__init__(self, game, scr)
@@ -334,6 +365,8 @@ class Play(BaseView):
         else:
             if self.game.keymap("view.play.inventory", code, mod):
                 self.game.set_view("Inventory", self.game.player.inventory)
+            elif self.game.keymap("view.play.mapoverview", code, mod):
+                self.game.set_view("MapOverview")
             else:
                 return False
             return True
@@ -341,6 +374,6 @@ class Play(BaseView):
     def draw(self):
         self.scr.clear()
         yx = self.scr.getmaxyx()
-        self.game.map.render(self.scr, (0, 0), (yx[0]-3, yx[1]))
+        self.game.map.render(self.scr, (0, 0), (yx[0]-6, yx[1]//2))
         self.scr.addstr(yx[0]-2, 1, "Round {0:.1f}".format(self.game.round/10))
         self.scr.noutrefresh()
