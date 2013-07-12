@@ -17,11 +17,24 @@ class Map:
         self.item_piles = {}
         self.particle_list = []
         self.stairs = []
+        self.data = []
+        self.discovered = [[" "]*self.size[0] for i in range(self.size[1])]
 
     def update(self):
+        self._update_discovery()
         self.item_piles = dict(filter(lambda x: len(x[1].items) > 0,
                                       self.item_piles.items()))
-        
+
+    def _update_discovery(self):
+        player_pos = self.game.player.pos
+        x_range = range(max(0, player_pos[0]-8),
+                        min(self.size[0], player_pos[0]+9))
+        y_range = range(max(0, player_pos[1]-8),
+                        min(self.size[1], player_pos[1]+9))
+        for y, x in itertools.product(y_range, x_range):
+            if ((x-player_pos[0])**2 + (y-player_pos[1])**2) <= 8**2:
+                self.discovered[y][x] = self.data[y][x]
+
     def add_items(self, items, pos):
         if pos not in self.item_piles:
             self.item_piles[pos] = Pile(self.game, self, pos)
@@ -116,7 +129,9 @@ class Map:
                              and pos[1] >= topleft_offset[1]
                              and pos[0] < scrdim[0]
                              and pos[1] < scrdim[1])
-        in_view = lambda pos:((pos[0]-player_pos[0])**2 + (pos[1]-player_pos[1])**2 <= 8**2)
+        in_view = lambda pos:((pos[0]-player_pos[0])**2
+                              + (pos[1]-player_pos[1])**2
+                              <= 8**2)
         
         # draw map
         for y in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
@@ -128,7 +143,7 @@ class Map:
                 continue
             x = topleft_offset[1]+max(0, -pos[0]+start_x)
             scr.addstr(y, x,
-                       "".join(self.data[real_y][start_x:end_x]),
+                       "".join(self.discovered[real_y][start_x:end_x]),
                        curses.A_NORMAL)
 
         for y, x in itertools.product(range(player_pos[0]-8, player_pos[0]+9),
@@ -139,6 +154,9 @@ class Map:
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
             if in_scr(scrcoord):
+                if(not in_view(scrcoord)
+                   and self.discovered[pos[1]][pos[0]] == " "):
+                    continue
                 scr.addch(scrcoord[0], scrcoord[1],
                            pile.render(),
                            curses.A_DIM)
