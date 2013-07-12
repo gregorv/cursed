@@ -3,7 +3,7 @@ import curses
 import configparser
 
 import view
-from map import Map
+from map import Map, RandomDungeon
 from player import Player
 from keymapping import Keymapping
 
@@ -21,7 +21,7 @@ class Game:
        
         self.quit = False
         
-        self.map = Map(self, "1", (200, 200))
+        self.map = RandomDungeon(self, "1", (200, 200))
         self.map.generate()
         
         self.round = 0

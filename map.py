@@ -26,14 +26,73 @@ class Map:
                                       self.item_piles.items()))
 
     def _update_discovery(self):
-        player_pos = self.game.player.pos
-        x_range = range(max(0, player_pos[0]-8),
-                        min(self.size[0], player_pos[0]+9))
-        y_range = range(max(0, player_pos[1]-8),
-                        min(self.size[1], player_pos[1]+9))
-        for y, x in itertools.product(y_range, x_range):
-            if ((x-player_pos[0])**2 + (y-player_pos[1])**2) <= 8**2:
-                self.discovered[y][x] = self.data[y][x]
+        visible = self.get_visible_area(self.game.player.pos, 8)
+        for x,y in visible:
+            self.discovered[y][x] = self.data[y][x]
+
+    def get_los_fields(self, start, end):
+        """
+        Return a generator for field coordinates that are in
+        the line of sight from start to end.
+        No occlusion checks are done!
+        """
+        diff = (end[0]-start[0], end[1]-start[1])
+        max_grid_dist = max(*map(abs, diff))
+        if max_grid_dist == 0:
+            yield start
+        else:
+            delta = (diff[0]/max_grid_dist,
+                     diff[1]/max_grid_dist)
+            fields = [start]
+            cur = start
+            while(end[0] != int(round(cur[0]))
+                or end[1] != int(round(cur[1]))):
+                cur = (cur[0]+delta[0], cur[1]+delta[1])
+                yield int(round(cur[0])), int(round(cur[1]))
+
+    def get_occluded_los_fields(self, start, end):
+        """
+        Return a generator for field coordinates that are in
+        the line of sight from start to end. If something
+        is in the way (#), the list is aborted. The occluding
+        field is included in the list!
+        """
+        for pos in self.get_los_fields(start, end):
+            yield pos
+            if self.data[pos[1]][pos[0]] == "#":
+                break
+
+    def get_field_circle(self, center, radius):
+        """
+        A generator returning field coordinates that lie on
+        the specified circle. Note that a squared metric is used!
+        """
+        prev_y = 0
+        recalc_y = 0
+        for x in range(-radius, radius+1):
+            y = int(round(math.sqrt(radius**2 - x**2)))
+            if prev_y - y > 1 and recalc_y == 0:
+                recalc_y = prev_y
+            yield (center[0]+x, center[1]+y)
+            yield (center[0]+x, center[1]-y)
+            prev_y = y
+        for y in range(-recalc_y+1, recalc_y):
+            x = int(round(math.sqrt(radius**2 - y**2)))
+            yield (center[0]+x, center[1]+y)
+            yield (center[0]-x, center[1]+y)
+
+    def get_visible_area(self, center, radius):
+        """
+        return a list of all field positions that are visible from the given center point.
+        Visible means that it a field is both inside the given radius and the los is
+        not occluded by the dungeon ("#")
+        """
+        visible = set()
+        closed_circle = set(self.get_field_circle(center, radius))
+        closed_circle.update(set(self.get_field_circle(center, radius-1)))
+        for p in closed_circle:
+            visible.update(set(self.get_occluded_los_fields(center, p)))
+        return list(visible)
 
     def add_items(self, items, pos):
         if pos not in self.item_piles:
@@ -129,9 +188,6 @@ class Map:
                              and pos[1] >= topleft_offset[1]
                              and pos[0] < scrdim[0]
                              and pos[1] < scrdim[1])
-        in_view = lambda pos:((pos[0]-player_pos[0])**2
-                              + (pos[1]-player_pos[1])**2
-                              <= 8**2)
         
         # draw map
         for y in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
@@ -146,15 +202,16 @@ class Map:
                        "".join(self.discovered[real_y][start_x:end_x]),
                        curses.A_NORMAL)
 
-        for y, x in itertools.product(range(player_pos[0]-8, player_pos[0]+9),
-                                    range(player_pos[1]-8, player_pos[1]+9)):
-            if in_scr((y, x)) and in_view((y, x)):
-                scr.chgat(y, x, 1, curses.A_BOLD)
+        visible_area = list(self.get_visible_area(self.game.player.pos, 8))
+
+        for p in map(coord, visible_area):
+            if in_scr(p):
+                scr.chgat(p[0], p[1], 1, curses.A_BOLD)
         # draw item piles
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
             if in_scr(scrcoord):
-                if(not in_view(scrcoord)
+                if(pos not in visible_area
                    and self.discovered[pos[1]][pos[0]] == " "):
                     continue
                 scr.addch(scrcoord[0], scrcoord[1],
@@ -163,12 +220,25 @@ class Map:
         # draw NPCs (only if in view)
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
-            if in_scr(scrcoord) and in_view(scrcoord):
+            if in_scr(scrcoord) and pos in visible_area:
                 scr.addch(scrcoord[0], scrcoord[1],
                            pile.render())
         if in_scr(player_pos):
             scr.addch(player_pos[0], player_pos[1], "@")
+        #fileds = self.get_field_circle(self.game.player.pos, 8)
+        #for p in map(coord, fileds):
+           #if in_scr(p):
+                #scr.addch(p[0], p[1], "*", curses.color_pair(1))
         
 class RandomDungeon(Map):
     def generate(self):
-        self.data = []
+        self.data = [["#"]*self.size[0]]
+        self.data.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
+        self.data.append(["#"]*self.size[0])
+        for i in range(600):
+            x = random.randint(4, self.size[0]-4)
+            y = random.randint(4, self.size[1]-4)
+            self.data[y][x] = "#"
+            self.data[y+1][x] = "#"
+            self.data[y][x+1] = "#"
+            self.data[y+1][x+1] = "#"
