@@ -20,6 +20,8 @@ class Map:
         self.particle_list = []
         self.stairs = []
         self.data = []
+        self.data_wall = []
+        self.data_water = []
         self.discovered = [[" "]*self.size[0] for i in range(self.size[1])]
         self._visible_area = []
 
@@ -31,7 +33,7 @@ class Map:
     def _update_discovery(self):
         self._visible_area = self.get_visible_area(self.game.player.pos, 8)
         for x,y in self._visible_area:
-            self.discovered[y][x] = self.data[y][x]
+            self.discovered[y][x] = self.data_floor[y][x]
 
     def get_los_fields(self, start, end):
         """
@@ -62,7 +64,7 @@ class Map:
         """
         for pos in self.get_los_fields(start, end):
             yield pos
-            if self.data[pos[1]][pos[0]] == "#":
+            if self.data_floor[pos[1]][pos[0]] == "#":
                 break
 
     def get_field_circle(self, center, radius):
@@ -132,7 +134,7 @@ class Map:
         if(pos[0] >= self.size[0] or pos[1] >= self.size[1]
            or pos[0] < 0 or pos[1] < 0):
             return "dungeon"
-        if self.data[pos[1]][pos[0]] == "#":
+        if self.data_floor[pos[1]][pos[0]] == "#":
             return "dungeon"
         #if(self.pos_stairs_in
            #and (x == self.pos_stairs_in[0]
@@ -159,9 +161,9 @@ class Map:
                 return (x, y)
         
     def generate(self):
-        self.data = [["#"]*self.size[0]]
-        self.data.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
-        self.data.append(["#"]*self.size[0])
+        self.data_floor = [["#"]*self.size[0]]
+        self.data_floor.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
+        self.data_floor.append(["#"]*self.size[0])
     
     def populate(self, n=10):
         pass
@@ -193,21 +195,42 @@ class Map:
                              and pos[1] < scrdim[1])
         
         # draw map
-        for y in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
-            pos = revcoord((y, topleft_offset[1]))
-            real_y = max(0, min(self.size[1]-1, pos[1]))
-            start_x = max(0, pos[0])
-            end_x = min(pos[0]+scrdim[1], self.size[0])
+        sty_wall = self.game.style["map.wall"]
+        sty_wall_vis = self.game.style["map.wall_visible"]
+        sty_floor = self.game.style["map.floor"]
+        sty_floor_vis = self.game.style["map.floor_visible"]
+        sty_water = self.game.style["map.water"]
+        sty_water_vis = self.game.style["map.water_visible"]
+        sty_misc = self.game.style["map.misc"]
+        sty_misc_vis = self.game.style["map.misc_visible"]
+        for ys in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
+            pos = revcoord((ys, topleft_offset[1]))
             if pos[1] < 0 or pos[1] >= self.size[1]:
                 continue
-            x = topleft_offset[1]+max(0, -pos[0]+start_x)
-            scr.addstr(y, x,
-                       "".join(self.discovered[real_y][start_x:end_x]),
-                       curses.A_NORMAL)
-
-        for p in map(coord, self._visible_area):
-            if in_scr(p):
-                scr.chgat(p[0], p[1], 1, curses.A_BOLD)
+            for xs in range(topleft_offset[1], topleft_offset[1]+scrdim[1]):
+                x, y = revcoord((ys, xs))
+                if x < 0 or x >= self.size[0]:
+                    continue
+                if self.discovered[y][x] == ".":
+                    scr.addch(ys, xs,
+                               ".",
+                                sty_floor_vis if (x,y) in self._visible_area else sty_floor
+                                )
+                elif self.discovered[y][x] == "#":
+                    scr.addch(ys, xs,
+                               "#",
+                               sty_wall_vis if (x,y) in self._visible_area else sty_wall
+                               )
+                elif self.discovered[y][x] == "~":
+                    scr.addch(ys, xs,
+                               "~",
+                               sty_water_vis if (x,y) in self._visible_area else sty_water
+                               )
+                else:
+                    scr.addch(ys, xs,
+                               self.discovered[y][x],
+                                sty_misc_vis if (x,y) in self._visible_area else sty_misc
+                                )
         # draw item piles
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
@@ -225,7 +248,7 @@ class Map:
                 scr.addch(scrcoord[0], scrcoord[1],
                            pile.render())
         if in_scr(player_pos):
-            scr.addch(player_pos[0], player_pos[1], "@")
+            scr.addch(player_pos[0], player_pos[1], "@", self.game.style["player"])
         #fileds = self.get_field_circle(self.game.player.pos, 8)
         #for p in map(coord, fileds):
            #if in_scr(p):
@@ -233,13 +256,13 @@ class Map:
         
 class RandomDungeon(Map):
     def generate(self):
-        self.data = [["#"]*self.size[0]]
-        self.data.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
-        self.data.append(["#"]*self.size[0])
+        self.data_floor = [["#"]*self.size[0]]
+        self.data_floor.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
+        self.data_floor.append(["#"]*self.size[0])
         for i in range(600):
             x = random.randint(4, self.size[0]-4)
             y = random.randint(4, self.size[1]-4)
-            self.data[y][x] = "#"
-            self.data[y+1][x] = "#"
-            self.data[y][x+1] = "#"
-            self.data[y+1][x+1] = "#"
+            self.data_floor[y][x] = "#"
+            self.data_floor[y+1][x] = "#"
+            self.data_floor[y][x+1] = "#"
+            self.data_floor[y+1][x+1] = "#"

@@ -1,4 +1,6 @@
 
+from __future__ import division
+
 import curses
 import ConfigParser
 
@@ -8,13 +10,11 @@ from player import Player
 from keymapping import Keymapping
 
 class Game:
-    def __init__(self, stdscr, extra_config=None):
-        self.stdscr = stdscr
-        self.stdscr.resize(25, 80)
+    def __init__(self, stdscr, extra_config=None):        
         self.config = ConfigParser.ConfigParser()
         self.config.read("cursed.cfg")
         if extra_config:
-            allowed_sections = ["keymap"]
+            allowed_sections = ["keymap", "style", "colorvalues"]
             cfg = ConfigParser.ConfigParser()
             cfg.read(extra_config)
             for sec in allowed_sections:
@@ -26,6 +26,10 @@ class Game:
         
         self.keymap = Keymapping()
         self.keymap.import_mapping(self.config["keymap"])
+        
+        self._setup_styles()
+        self.stdscr = stdscr
+        self.stdscr.resize(25, 80)
         
         self.player = Player(self)
        
@@ -44,6 +48,50 @@ class Game:
             if i == 0:
                 self.play_view = tmp
         self.current_view = self.play_view
+        
+    def _setup_styles(self):
+        # get color and attribute numbers from curses
+        colors = dict((key[6:].lower(), val)
+                  for key, val in curses.__dict__.items()
+                  if key.startswith("COLOR_"))
+        attributes = dict((key[2:].lower(), val)
+                  for key, val in curses.__dict__.items()
+                  if key.startswith("A_"))
+        
+        self.use_color = False
+        if("use_colors" in self.config["style"]
+           and self.config["style"]["use_colors"].lower()
+           == "true"):
+                self.use_color = True
+                curses.start_color()
+                for i in range(1, 64):
+                    curses.init_pair(i, i%8, i//8)
+        self.style = {}
+        f = open("test", "w")
+        for key, val in self.config["style"].items():
+            if key != "use_colors":
+                attr = ""
+                if "," in val:
+                    color, attr = map(str.strip, val.split(","))
+                else:
+                    color = val.strip()
+                if ";" in color:
+                    fg_color, bg_color = map(str.strip, color.split(";"))
+                    fg_color = colors[fg_color]
+                    bg_color = colors[bg_color]
+                else:
+                    fg_color = colors[color]
+                    bg_color = colors["black"]
+                if not self.use_color:
+                    fg_color = 1
+                    bg_color = 0
+                self.style[key] = 0
+                for a in attr.split():
+                    self.style[key] += attributes[a]
+                if self.use_color:
+                    self.style[key] += curses.color_pair(fg_color + 8*bg_color)
+                f.write("%s %s %s %s: %i %i %i\n"%(key, val, color, attr, fg_color, bg_color, self.style[key]))
+                
         
     def set_view(self, new_active="", *args, **kwargs):
         self.current_view.on_deactivate()

@@ -10,12 +10,6 @@ import traceback
 from game import Game
 
 def start_game(stdscr, args):
-    curses.curs_set(0)
-    curses.start_color()
-    curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE);
-    curses.init_pair(2, curses.COLOR_BLACK, curses.COLOR_RED);
-    curses.init_pair(3, curses.COLOR_BLACK, curses.COLOR_YELLOW);
-    curses.init_pair(4, curses.COLOR_BLACK, curses.COLOR_BLUE);
     game = Game(stdscr, extra_config=args["c"])
     if "u" in args:
         game.player.name = args["u"]
