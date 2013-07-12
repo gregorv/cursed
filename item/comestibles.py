@@ -8,7 +8,7 @@ class Comestible(Item, ItemStackable):
         Item.__init__(self, game)
         ItemStackable.__init__(self)
 
-    def on_ingest(self):
+    def on_ingest(self, ingester):
         pass
 
 class Apple(Comestible):
