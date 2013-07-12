@@ -116,7 +116,7 @@ class Map:
                              and pos[1] >= topleft_offset[1]
                              and pos[0] < scrdim[0]
                              and pos[1] < scrdim[1])
-        in_view = lambda pos:((pos[0]-player_pos[0])**2 + (pos[1]-player_pos[1])**2 < 8**2)
+        in_view = lambda pos:((pos[0]-player_pos[0])**2 + (pos[1]-player_pos[1])**2 <= 8**2)
         
         # draw map
         for y in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
@@ -131,8 +131,8 @@ class Map:
                        "".join(self.data[real_y][start_x:end_x]),
                        curses.A_NORMAL)
 
-        for y, x in itertools.product(range(player_pos[0]-7, player_pos[0]+7),
-                                    range(player_pos[1]-7, player_pos[1]+7)):
+        for y, x in itertools.product(range(player_pos[0]-8, player_pos[0]+9),
+                                    range(player_pos[1]-8, player_pos[1]+9)):
             if in_scr((y, x)) and in_view((y, x)):
                 scr.chgat(y, x, 1, curses.A_BOLD)
         # draw item piles
