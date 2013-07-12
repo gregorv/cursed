@@ -46,5 +46,8 @@ class ItemModifyable:
     pass
 
 class ItemWieldable:
-    def on_wield_attack(self, wielder, target):
+    def __init__(self, game):
+        self.wielder = None
+
+    def on_wield_attack(self, target):
         return False
