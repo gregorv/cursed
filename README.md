@@ -8,7 +8,8 @@ How to run it?
 
 You can either download and run the sources yourself or play via telnet.
 
-*   To play localy, run the *cursed.py* in terminal, you need at least Python 3 to run it.
+*   To play localy, run the *cursed.py* in terminal, Python2 is required. There is
+    Python 3 branch, because originaly py3 was used, but for py2 performs alot faster…
 
 *   If you just want to play and don't want to fetch the sources all the time,
     you can connect to the Cursed server via telnet
