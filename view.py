@@ -289,6 +289,9 @@ class ItemView(BaseView):
         self.scr.noutrefresh()
 
 class Inventory(ItemView):
+    def on_activate(self):
+        ItemView.on_activate(self, self.game.player.inventory)
+
     def draw(self):
         self.scr.clear()
         self.scr.addstr(0, 10, "Inventory", curses.A_BOLD)
@@ -364,7 +367,7 @@ class Play(BaseView):
             return True
         else:
             if self.game.keymap("view.play.inventory", code, mod):
-                self.game.set_view("Inventory", self.game.player.inventory)
+                self.game.set_view("Inventory")
             elif self.game.keymap("view.play.mapoverview", code, mod):
                 self.game.set_view("MapOverview")
             else:
