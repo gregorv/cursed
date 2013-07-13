@@ -30,6 +30,7 @@ class Player(Entity):
         self.mana = 0
         self.skills = SkillSet()
         self.inventory = Inventory(self.game)
+        self.wielded = None
 
     def handle_keypress(self, code, mod):
         move = (0, 0)
@@ -55,13 +56,10 @@ class Player(Entity):
                 self.pos = new
                 self.set_round_cooldown(math.sqrt((10*move[0])**2
                                                   + (10*move[1])**2))
+            elif isinstance(detect, Entity):
+                if self.wielded:
+                    self.wielded.on_wield_attack(detect)
+                else:
+                    detect.attack(self, self.skills["char.strength"])
         return True
 
-character_skills = (
-    ("max_hp", 20, "Max HP", "Maximum HP"),
-    ("max_mana", 20, "Max Mana", "Maximum Mana"),
-    ("hp_regen", 1, "HP Regen", "Regeneration of HP per round"),
-    ("mana_regen", 1, "Mana Rege", "Regeneration of Mana per round"),
-    ("strength", 1, "Strength", "Strength of physical attacks"),
-    ("spell_casting", 1, "Spell Casting")
-)
