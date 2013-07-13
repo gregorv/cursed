@@ -19,6 +19,7 @@ from __future__ import division
 """
 
 from registry import Registry
+from entity import SkillSet
 
 
 class ItemRegistry(Registry):
@@ -32,6 +33,13 @@ class ItemRegistry(Registry):
                and "weight" in dict
                and "value" in dict
                and "symbol" in dict)
+
+    def __new__(self, name, bases, dict):
+        for n, skills in filter(lambda d: d[0].startswith("skill_def_"),
+                                dict.items()):
+            SkillSet.add_skill_def(skills)
+            del dict[n]
+        return Registry.__new__(self, name, bases, dict)
 
 
 class Item():

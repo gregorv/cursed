@@ -18,7 +18,7 @@ from __future__ import division
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from entity import Entity
+from entity import Entity, SkillSet
 from item import Inventory
 import math
 
@@ -28,13 +28,7 @@ class Player(Entity):
         Entity.__init__(self, game)
         self.name = "Adventurer"
         self.mana = 0
-        self.char_skills = {
-            "max_hp": 20,
-            "max_mana": 20,
-            "hp_regen": 1,
-            "mana_regen": 1,
-            "strength": 1,
-        }
+        self.skills = SkillSet()
         self.inventory = Inventory(self.game)
 
     def handle_keypress(self, code, mod):
