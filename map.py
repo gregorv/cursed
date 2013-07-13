@@ -1,4 +1,5 @@
 ""
+from __future__ import division
 """
     This file is part of Cursed
     Copyright (C) 2013 Gregor Vollmer <gregor@celement.de>
@@ -16,8 +17,6 @@
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-
-from __future__ import division
 
 import random
 import math

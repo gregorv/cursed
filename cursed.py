@@ -22,6 +22,7 @@ import argparse
 import traceback
 from game import Game
 
+
 def start_game(stdscr, args):
     curses.cbreak()
     curses.curs_set(0)
@@ -47,5 +48,3 @@ if __name__ == "__main__":
                 f.write(traceback.format_exc())
         else:
             raise
-        
-        

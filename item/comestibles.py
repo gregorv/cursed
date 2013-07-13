@@ -1,4 +1,5 @@
 ""
+from __future__ import division
 """
     This file is part of Cursed
     Copyright (C) 2013 Gregor Vollmer <gregor@celement.de>
