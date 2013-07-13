@@ -298,6 +298,9 @@ class Map:
 
 
 class RandomDungeon(Map):
+    def __init__(self, game, name, size):
+        Map.__init__(self, game, name, (150, 150))
+
     def generate(self):
         self.data = [["#"]*(self.size[0]) for i in range(self.size[1])]
 
@@ -323,17 +326,38 @@ class RandomDungeon(Map):
             a = int(round(size/math.sqrt(2)))
             square_room(center, (a, a))
 
-        for room_pos in [(6, 6)]:
-            shape = random.randint(0, 2)
-            size = (random.randint(3, 5),
-                    random.randint(3, 5))
-            if shape == 0:
-                for x, y in itertools.product(range(room_pos[0]-size[0],
-                                                    room_pos[0]+size[0]),
-                                              range(room_pos[1]-size[1],
-                                                    room_pos[1]+size[1])):
-                    self.data[y][x] = "."
+        def add_corridor(start, end, width):
+            diff = (end[0]-start[0], end[1]-start[1])
+            max_dist = max(map(abs, diff))
+            if max_dist == 0:
+                return
+            delta = (diff[0]/max_dist, diff[1]/max_dist)
+            cur = start
+            icur = start
+            while(icur[0] != end[0]
+                  and icur[1] != end[1]):
+                cur = (cur[0] + delta[0],
+                       cur[1] + delta[1])
+                icur = tuple(map(int, cur))
+                ccur = tuple(map(int, map(math.ceil, cur)))
+                fcur = tuple(map(int, map(math.floor, cur)))
+                self.data[ccur[1]][ccur[0]] = "."
+                self.data[fcur[1]][fcur[0]] = "."
+        mid = (self.size[0]//2, self.size[1]//2)
+        start_points = [(mid, mid)]
+        for i in range(60):
+            start, p = start_points.pop()
+            if(p[0] > self.size[0]-6
+               or p[1] > self.size[1]-6
+               or p[0] < 6 or p[1] < 6):
+                continue
+            add_corridor(start, p, 1)
+            if random.randint(0, 1) == 0:
+                square_room(p)
             else:
-                for radius in range(0, size[0]+1):
-                    for x, y in self.get_field_circle(room_pos, radius):
-                        self.data[y][x] = "."
+                circular_room(p)
+            new_rooms = [(p,
+                          (random.randint(p[0]-30, p[0]+30),
+                           random.randint(p[1]-30, p[1]+30)))
+                         for i in range(random.randint(2, 6))]
+            start_points.extend(new_rooms)
