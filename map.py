@@ -281,8 +281,9 @@ class RandomDungeon(Map):
         
         corridors = []
         
-        def square_room(center):
-            shape = random.randint(0, 2)
+        def square_room(center, shape=None):
+            if shape is None:
+                shape = random.randint(0, 2)
             size = (random.randint(3, 5),
                     random.randint(3, 5))
             for x,y in itertools.product(range(center[0]-size[0],
@@ -296,8 +297,10 @@ class RandomDungeon(Map):
             for radius in range(0, size+1):
                 for x, y in self.get_field_circle(center, radius):
                     self.data[y][x] = "."
+            a = int(round(size/math.sqrt(2)))
+            square_room(center, (a, a))
 
-        for room_pos in [(5, 5)]:
+        for room_pos in [(6, 6)]:
             shape = random.randint(0, 2)
             size = (random.randint(3, 5),
                     random.randint(3, 5))
