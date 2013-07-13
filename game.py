@@ -1,5 +1,23 @@
-
+""
 from __future__ import division
+"""
+    This file is part of Cursed
+    Copyright (C) 2013 Gregor Vollmer <gregor@celement.de>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 
 import curses
 import ConfigParser
@@ -9,8 +27,9 @@ from map import Map, RandomDungeon
 from player import Player
 from keymapping import Keymapping
 
+
 class Game:
-    def __init__(self, stdscr, extra_config=None):        
+    def __init__(self, stdscr, extra_config=None):
         self.config = ConfigParser.ConfigParser()
         self.config.read("cursed.cfg")
         if extra_config:
@@ -22,45 +41,48 @@ class Game:
                     continue
                 for key, val in cfg.items(sec):
                     self.config.set(sec, key, val)
-        self.config = dict((sec, dict(self.config.items(sec))) for sec in self.config.sections())
-        
+        self.config = dict((sec, dict(self.config.items(sec)))
+                           for sec in self.config.sections())
+
         self.keymap = Keymapping()
         self.keymap.import_mapping(self.config["keymap"])
-        
+
         self._setup_styles()
         self.stdscr = stdscr
         self.stdscr.resize(25, 80)
-        
+
         self.player = Player(self)
-       
+
         self.quit = False
-        
+
         self.map = RandomDungeon(self, "1", (200, 200))
         self.map.generate()
-        
+
+        self.player.pos = self.map.get_free_space()
+
         self.round = 0
-        
+
         self.views = {}
-        screen_factory = [view.Play,
-                          view.Inventory,
-                          view.PickupItems,
-                          view.MapOverview,
+
+        screen_factory = [view.Play, view.Inventory,
+                          view.PickupItems, view.MapOverview,
                           view.WieldWeapon]
+
         for i, scr in enumerate(screen_factory):
             tmp = scr(self, self.stdscr)
             self.views[tmp.name] = tmp
             if i == 0:
                 self.play_view = tmp
         self.current_view = self.play_view
-        
+
     def _setup_styles(self):
         # get color and attribute numbers from curses
         colors = dict((key[6:].lower(), val)
-                  for key, val in curses.__dict__.items()
-                  if key.startswith("COLOR_"))
+                      for key, val in curses.__dict__.items()
+                      if key.startswith("COLOR_"))
         attributes = dict((key[2:].lower(), val)
-                  for key, val in curses.__dict__.items()
-                  if key.startswith("A_"))
+                          for key, val in curses.__dict__.items()
+                          if key.startswith("A_"))
         ansi_attributes = {
             "normal": 0,
             "bold": 1,
@@ -69,7 +91,7 @@ class Game:
             "blink": 5,
             "reverse": 7,
         }
-        
+
         self.use_color = False
         self.quick_map_draw = False
         if("use_colors" in self.config["style"]
@@ -78,7 +100,7 @@ class Game:
                 self.use_color = True
                 curses.start_color()
                 for i in range(1, 64):
-                    curses.init_pair(i, i%8, i//8)
+                    curses.init_pair(i, i % 8, i//8)
         if("quick_map_draw" in self.config["style"]
            and self.config["style"]["quick_map_draw"].lower()
            == "true"):
@@ -119,23 +141,22 @@ class Game:
                 self.ansi_style[key] = "\033[{0};{1};{2}m".format(ansi_at,
                                                                   30+fg_color,
                                                                   40+bg_color)
-                
-        
+
     def set_view(self, new_active="", *args, **kwargs):
         self.current_view.on_deactivate()
         if new_active:
             self.current_view = self.views[new_active]
         else:
-            self.current_view = self.play_view   
+            self.current_view = self.play_view
         self.current_view.on_activate(*args, **kwargs)
-    
+
     def handle_keypress(self, code, mod):
         if self.keymap("quit", code, mod):
             self.quit = True
         else:
             return self.current_view.handle_keypress(code, mod)
         return True
-    
+
     def perform_microround(self):
         redraw = False
         self.round += 1
