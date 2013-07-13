@@ -1,3 +1,22 @@
+""
+from __future__ import division
+"""
+    This file is part of Cursed
+    Copyright (C) 2013 Gregor Vollmer <gregor@celement.de>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import math
 import random
@@ -29,7 +48,7 @@ class Character:
         self.level = 1
         self.x = 1
         self.y = 1
-        
+
     def damage(self, dmg):
         self.hp = max(0, self.hp-int(dmg))
         if not self.hp:
@@ -37,39 +56,40 @@ class Character:
             return True
         else:
             return False
-    
+
     def heal(self, hp):
         self.hp = min(self.max_hp, self.hp+int(hp))
-            
+
     def kill(self, msg=None):
         self.hp = 0
         if msg:
             self.game.logger.log(msg)
         self.death_message()
-        
+
     def death_message(self):
         pass
-            
 
-class NPC(Character, metaclass=NPCRegistry):
+
+class NPC(Character):
     def __init__(self, game, level, loot):
         Character.__init__(self, game)
         self.level = int(level)
         self.loot = loot
-    
+
     #def death_message(self):
         #self.game.logger.log("You killed the {0}".format(self.__class__.__name__))
+
 
 class NPCEnemy(NPC):
     def __init__(self, game, level, loot):
         NPC.__init__(self, game, level, loot)
         self.last_know_player_pos = None
-    
+
     def attack(self, target):
         target.damage(10)
         self.last_know_player_pos = None
         self.view_range = 6
-        
+
     def animate(self):
         self.hp = int(min(self.max_hp, self.hp + self.regen))
         neighbourhood = [(self.x-1, self.y-1),
@@ -86,12 +106,12 @@ class NPCEnemy(NPC):
                and pos[1] == self.game.player.y):
                 self.attack(self.game.player)
                 return
-            
+
         dist = math.sqrt((self.game.player.x - self.x)**2
                          + (self.game.player.y - self.y)**2)
         if dist < self.view_range:
             self.last_know_player_pos = self.game.player.x, self.game.player.y
-        
+
         if self.last_know_player_pos:
             diff_x = self.game.player.x - self.x
             diff_y = self.game.player.y - self.y
@@ -101,7 +121,7 @@ class NPCEnemy(NPC):
                 (diff_x, diff_y),
                 (diff_x, 0),
                 (0, diff_y),
-               ]
+            ]
             random.shuffle(movements)
             for m in movements:
                 new_x = m[0] + self.x
@@ -110,7 +130,7 @@ class NPCEnemy(NPC):
                     self.x = new_x
                     self.y = new_y
                     return
-            
+
             for m in movements:
                 new_x = -m[0] + self.x
                 new_y = -m[1] + self.y
@@ -119,16 +139,17 @@ class NPCEnemy(NPC):
                     self.y = new_y
                     return
 
+
 class NPCEnemyMagican(NPCEnemy):
     def __init__(self, game, level, loot):
         NPCEnemy.__init__(self, game, level, loot)
         self.next_spell = None
         self.spells = []
         self.spirit = int(level*2.3)
-        
+
     def attack(self, target):
         target.damage(self.level)
-    
+
     def cast(self, target):
         self.game.logger.log("The {0} casts {1}".format(self.name, self.next_spell))
         spell.trigger_action(self.next_spell,
@@ -138,14 +159,14 @@ class NPCEnemyMagican(NPCEnemy):
                              (target.x, target.y),
                              silent=True)
         self.next_spell = random.choice(self.spells)
-        
+
     def animate(self):
         self.hp = int(min(self.max_hp, self.hp + self.regen))
         self.mana = int(min(self.max_mana, self.mana + self.mana_regen))
-        
+
         if self.spells and not self.next_spell:
             self.next_spell = random.choice(self.spells)
-        
+
         neighbourhood = [(self.x-1, self.y-1),
                          (self.x, self.y-1),
                          (self.x+1, self.y-1),
@@ -154,7 +175,7 @@ class NPCEnemyMagican(NPCEnemy):
                          (self.x-1, self.y+1),
                          (self.x, self.y+1),
                          (self.x+1, self.y+1),
-                        ]
+        ]
         
         dist = math.sqrt((self.game.player.x - self.x)**2
                          + (self.game.player.y - self.y)**2)
@@ -182,7 +203,7 @@ class NPCEnemyMagican(NPCEnemy):
                 (diff_x, diff_y),
                 (diff_x, 0),
                 (0, diff_y),
-               ]
+            ]
             random.shuffle(movements)
             for m in movements:
                 new_x = m[0] + self.x
@@ -191,7 +212,7 @@ class NPCEnemyMagican(NPCEnemy):
                     self.x = new_x
                     self.y = new_y
                     return
-            
+
             for m in movements:
                 new_x = -m[0] + self.x
                 new_y = -m[1] + self.y
@@ -202,24 +223,26 @@ class NPCEnemyMagican(NPCEnemy):
         else:
             for pos in neighbourhood:
                 if(pos[0] == self.game.player.x
-                and pos[1] == self.game.player.y):
+                   and pos[1] == self.game.player.y):
                     self.attack(self.game.player)
                     return
+
+
 class Ant(NPCEnemy):
     name = "Ant"
     symbol = "a"
     min_dungeon_level = 1
     max_dungeon_level = 4
-    
+
     def __init__(self, game, loot):
         NPCEnemy.__init__(self, game, random.randint(1, 3), loot)
         self.max_hp = 3+self.level
         self.hp = self.max_hp
         self.view_range = 4
-        
+
     def exp_loot(self):
         return self.level*4
-    
+
     def attack(self, target):
         target.damage(self.level)
 
@@ -229,13 +252,13 @@ class Ferret(NPCEnemy):
     symbol = "f"
     min_dungeon_level = 2
     max_dungeon_level = 6
-    
+
     def __init__(self, game, loot):
         NPCEnemy.__init__(self, game, random.randint(1, 3), loot)
         self.max_hp = 5+self.level**2
         self.hp = self.max_hp
         self.view_range = 4
-        
+
     def exp_loot(self):
         return int(self.level*5.5)
     

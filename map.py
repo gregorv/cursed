@@ -1,5 +1,22 @@
-
+""
 from __future__ import division
+"""
+    This file is part of Cursed
+    Copyright (C) 2013 Gregor Vollmer <gregor@celement.de>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+"""
 
 import random
 import math
@@ -9,6 +26,7 @@ import curses
 from item import Pile, Container, ItemRegistry
 #import character
 #from registry import NPCRegistry, ItemRegistry
+
 
 class Map:
     def __init__(self, game, name, size):
@@ -30,7 +48,7 @@ class Map:
 
     def _update_discovery(self):
         self._visible_area = self.get_visible_area(self.game.player.pos, 8)
-        for x,y in self._visible_area:
+        for x, y in self._visible_area:
             self.discovered[y][x] = self.data[y][x]
 
     def get_los_fields(self, start, end):
@@ -49,7 +67,7 @@ class Map:
             fields = [start]
             cur = start
             while(end[0] != int(round(cur[0]))
-                or end[1] != int(round(cur[1]))):
+                  or end[1] != int(round(cur[1]))):
                 cur = (cur[0]+delta[0], cur[1]+delta[1])
                 yield int(round(cur[0])), int(round(cur[1]))
 
@@ -86,9 +104,10 @@ class Map:
 
     def get_visible_area(self, center, radius):
         """
-        return a list of all field positions that are visible from the given center point.
-        Visible means that it a field is both inside the given radius and the los is
-        not occluded by the dungeon ("#")
+        return a list of all field positions that are visible from
+        the given center point. Visible means that it a field is both
+        inside the given radius and the los is not occluded by the
+        dungeon ("#")
         """
         visible = set()
         closed_circle = set(self.get_field_circle(center, radius))
@@ -101,14 +120,14 @@ class Map:
         if pos not in self.item_piles:
             self.item_piles[pos] = Pile(self.game, self, pos)
         self.item_piles[pos].add(items)
-        
+
     def pop_items(self, pos):
         items = Container(self, self.game)
         if pos in self.item_piles:
             items.add(self.item_piles[pos])
             del self.item_piles[pos]
         return items
-        
+
     #def update(self):
         #def removeKilledNPCs():
             #killed = list(filter(lambda npc: npc.hp <= 0, self.npc_list))
@@ -127,7 +146,7 @@ class Map:
         #self.particle_list = list(filter(lambda p: p.lifetime > 0, self.particle_list))
         #removeKilledNPCs()
         #self.npc_list = list(filter(lambda npc: npc.hp > 0, self.npc_list))
-        
+
     def collision_detect(self, pos, ignore=None):
         if(pos[0] >= self.size[0] or pos[1] >= self.size[1]
            or pos[0] < 0 or pos[1] < 0):
@@ -150,29 +169,30 @@ class Map:
         if pos == self.game.player.pos:
             return self.game.player
         return None
-    
+
     def get_free_space(self):
         while True:
             x = random.randint(0, self.size[0])
             y = random.randint(0, self.size[1])
             if self.collision_detect((x, y)) is None:
                 return (x, y)
-        
+
     def generate(self):
         self.data = [["#"]*self.size[0]]
-        self.data.extend([["#"]+["."]*(self.size[0]-2)+["#"] for i in range(self.size[1]-2)])
+        self.data.extend([["#"]+["."]*(self.size[0]-2)+["#"]
+                          for i in range(self.size[1]-2)])
         self.data.append(["#"]*self.size[0])
-    
+
     def populate(self, n=10):
         pass
 
     def on_enter(self, origin):
         for npc in self.npc_list:
             npc.last_know_player_pos = None
-    
+
     def on_exit(self, target):
         pass
-        
+
     def render(self, scr, topleft_offset, scrdim, center=None):
         if center is None:
             center = self.game.player.pos
@@ -183,15 +203,15 @@ class Map:
                              pos[0]-center[0]+scrmid[1])
         # screen coord > wordl coord
         revcoord = lambda pos: (pos[1]+center[0]-scrmid[1],
-                             pos[0]+center[1]-scrmid[0])
+                                pos[0]+center[1]-scrmid[0])
 
         player_pos = coord(self.game.player.pos)
 
-        in_scr = lambda pos:(pos[0] >= topleft_offset[0]
-                             and pos[1] >= topleft_offset[1]
-                             and pos[0] < scrdim[0]
-                             and pos[1] < scrdim[1])
-        
+        in_scr = lambda pos: (pos[0] >= topleft_offset[0]
+                              and pos[1] >= topleft_offset[1]
+                              and pos[0] < scrdim[0]
+                              and pos[1] < scrdim[1])
+
         if self.game.quick_map_draw:
             for y in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
                 pos = revcoord((y, topleft_offset[1]))
@@ -202,7 +222,7 @@ class Map:
                     continue
                 x = topleft_offset[1]+max(0, -pos[0]+start_x)
                 scr.addstr(y, x,
-                        "".join(self.discovered[real_y][start_x:end_x]))
+                           "".join(self.discovered[real_y][start_x:end_x]))
 
             for p in map(coord, self._visible_area):
                 if in_scr(p):
@@ -226,32 +246,32 @@ class Map:
                         continue
                     if self.discovered[y][x] == ".":
                         scr.addch(ys, xs,
-                                ".",
-                                    sty_floor_vis
-                                    if (x,y) in self._visible_area
-                                    else sty_floor
-                                    )
+                                  ".",
+                                  sty_floor_vis
+                                  if (x, y) in self._visible_area
+                                  else sty_floor
+                                  )
                     elif self.discovered[y][x] == "#":
                         scr.addch(ys, xs,
-                                "#",
-                                sty_wall_vis
-                                if (x,y) in self._visible_area
-                                else sty_wall
-                                )
+                                  "#",
+                                  sty_wall_vis
+                                  if (x, y) in self._visible_area
+                                  else sty_wall
+                                  )
                     elif self.discovered[y][x] == "~":
                         scr.addch(ys, xs,
-                                "~",
-                                sty_water_vis
-                                if (x,y) in self._visible_area
-                                else sty_water
-                                )
+                                  "~",
+                                  sty_water_vis
+                                  if (x, y) in self._visible_area
+                                  else sty_water
+                                  )
                     else:
                         scr.addch(ys, xs,
-                                self.discovered[y][x],
-                                    sty_misc_vis
-                                    if (x,y) in self._visible_area
-                                    else sty_misc
-                                    )
+                                  self.discovered[y][x],
+                                  sty_misc_vis
+                                  if (x, y) in self._visible_area
+                                  else sty_misc
+                                  )
         # draw item piles
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
@@ -260,37 +280,40 @@ class Map:
                    and self.discovered[pos[1]][pos[0]] == " "):
                     continue
                 scr.addch(scrcoord[0], scrcoord[1],
-                           pile.render(),
-                           curses.A_DIM)
+                          pile.render(),
+                          curses.A_DIM)
         # draw NPCs (only if in view)
         for pos, pile in self.item_piles.items():
             scrcoord = coord(pos)
             if in_scr(scrcoord) and pos in self._visible_area:
                 scr.addch(scrcoord[0], scrcoord[1],
-                           pile.render())
+                          pile.render())
         if in_scr(player_pos):
-            scr.addch(player_pos[0], player_pos[1], "@", self.game.style["player"])
+            scr.addch(player_pos[0], player_pos[1],
+                      "@", self.game.style["player"])
         #fileds = self.get_field_circle(self.game.player.pos, 8)
         #for p in map(coord, fileds):
            #if in_scr(p):
                 #scr.addch(p[0], p[1], "*", curses.color_pair(1))
-        
+
+
 class RandomDungeon(Map):
     def generate(self):
         self.data = [["#"]*(self.size[0]) for i in range(self.size[1])]
-        
+
         corridors = []
-        
+
         def square_room(center, shape=None):
             if shape is None:
                 shape = random.randint(0, 2)
             size = (random.randint(3, 5),
                     random.randint(3, 5))
-            for x,y in itertools.product(range(center[0]-size[0],
+            for x, y in itertools.product(range(center[0]-size[0],
                                                 center[0]+size[0]),
-                                            range(center[1]-size[1],
+                                          range(center[1]-size[1],
                                                 center[1]+size[1])):
                 self.data[y][x] = "."
+
         def circular_room(center):
             shape = random.randint(0, 2)
             size = random.randint(3, 5)
@@ -305,13 +328,12 @@ class RandomDungeon(Map):
             size = (random.randint(3, 5),
                     random.randint(3, 5))
             if shape == 0:
-                for x,y in itertools.product(range(room_pos[0]-size[0],
-                                                   room_pos[0]+size[0]),
-                                             range(room_pos[1]-size[1],
-                                                   room_pos[1]+size[1])):
+                for x, y in itertools.product(range(room_pos[0]-size[0],
+                                                    room_pos[0]+size[0]),
+                                              range(room_pos[1]-size[1],
+                                                    room_pos[1]+size[1])):
                     self.data[y][x] = "."
             else:
                 for radius in range(0, size[0]+1):
                     for x, y in self.get_field_circle(room_pos, radius):
                         self.data[y][x] = "."
-
