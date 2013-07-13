@@ -17,11 +17,12 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 class Registry(type):
     classes = {}
-    
-    def __new__(mcs, name, bases, dict):
-        cls = type.__new__(mcs, name, bases, dict)
-        if mcs.check_validity(name, bases, dict):
-            mcs.classes[name] = cls
+
+    def __new__(self, name, bases, dict):
+        cls = type.__new__(self, name, bases, dict)
+        if self.check_validity(name, bases, dict):
+            self.classes[name] = cls
         return cls

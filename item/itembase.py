@@ -19,11 +19,12 @@
 
 from registry import Registry
 
+
 class ItemRegistry(Registry):
     @classmethod
     def create(cls, game, item):
         return cls.classes[item](game)
-    
+
     @classmethod
     def check_validity(cls, name, bases, dict):
         return("name" in dict
@@ -31,8 +32,10 @@ class ItemRegistry(Registry):
                and "value" in dict
                and "symbol" in dict)
 
+
 class Item():
     __metaclass__ = ItemRegistry
+
     def __init__(self, game):
         self.game = game
         self.type = self.__class__.__name__
@@ -43,10 +46,10 @@ class Item():
         self.used_up = False
         self.container = None
         self.hotkey = None
-        
+
     def on_ingest(self, ingester):
         pass
-    
+
     def on_read(self, reader):
         pass
 
@@ -54,15 +57,17 @@ class Item():
 class ItemStackable:
     def __init__(self):
         self.count = 1
-        
+
     def __getattribute__(self, name):
         if name == "weight":
             return self.count * self.__class__.weight
         else:
             return object.__getattribute__(self, name)
 
+
 class ItemModifyable:
     pass
+
 
 class ItemWieldable:
     def __init__(self, game):

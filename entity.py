@@ -17,6 +17,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+
 class Entity:
     """
     Things knowing the concept of life and the space-time.
@@ -27,7 +28,6 @@ class Entity:
         self.pos = (1, 1)
         self.symbol = " "
         self.round_cooldown = 0
-        
+
     def set_round_cooldown(self, time_required):
         self.round_cooldown = int(time_required)
-        

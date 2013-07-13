@@ -23,6 +23,7 @@ from entity import Entity
 from item import Inventory
 import math
 
+
 class Player(Entity):
     def __init__(self, game):
         Entity.__init__(self, game)
@@ -36,7 +37,7 @@ class Player(Entity):
             "strength": 1,
         }
         self.inventory = Inventory(self.game)
-        
+
     def handle_keypress(self, code, mod):
         move = (0, 0)
         if self.game.keymap("player.w", code, mod): move = (-1, 0)
@@ -53,13 +54,14 @@ class Player(Entity):
                                    self.game.map.item_piles[self.pos])
         else:
             return False
-        
+
         if move != (0, 0):
-           new = move[0] + self.pos[0], move[1] + self.pos[1]
-           detect = self.game.map.collision_detect(new)
-           if detect is None:
-               self.pos = new
-               self.set_round_cooldown(math.sqrt((10*move[0])**2 + (10*move[1])**2))
+            new = move[0] + self.pos[0], move[1] + self.pos[1]
+            detect = self.game.map.collision_detect(new)
+            if detect is None:
+                self.pos = new
+                self.set_round_cooldown(math.sqrt((10*move[0])**2
+                                                  + (10*move[1])**2))
         return True
 
 character_skills = (

@@ -19,6 +19,6 @@
 
 from registry import NPCRegistry
 
-class NPC(metaclass = NPCRegistry):
-    pass
 
+class NPC(metaclass):
+    __metaclass__ = NPCRegistry
