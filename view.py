@@ -64,7 +64,7 @@ class ItemView(BaseView):
                             key=lambda x: x.name))
         left = True
         y = self.scroll_offset+1
-        for item in items[self.scroll_offset*2
+        for item in items[self.scroll_offset*2:
                           (self.scroll_offset+self.item_view_height)*2]:
             self.scr.addstr(y,
                             0 if left else self.max_x//2,
