@@ -22,7 +22,7 @@ from __future__ import division
 import curses
 import ConfigParser
 
-import view
+from view import ViewRegistry
 from map import Map, RandomDungeon
 from player import Player
 from keymapping import Keymapping
