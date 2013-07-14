@@ -58,8 +58,8 @@ class Player(Entity):
             dmg = fightsystem.status_effect(self, target, dmg)
             target.hp = int(max(0, target.hp - dmg))
         self.set_round_cooldown(10)
-        if target.hp <= 0:
-            self.exp += int(100*math.exp(-(self.level - target.level)))
+        if target.hp <= 0 and (self.level - target.level) < 7:
+            self.exp += int(100*math.exp(-0.5*(self.level - target.level)))
             self.level_up()
 
     def level_up(self):
