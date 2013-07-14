@@ -159,13 +159,17 @@ class Game:
         self.round += 1
         self.player.round_cooldown -= 1
         for npc in self.map.npc_list:
-            if npc.npc_list == 0:
+            if npc.round_cooldown == 0:
                 npc.animate()
                 redraw = True
             else:
                 npc.round_cooldown -= 1
         # UPDATE PARTICLES
         # DEATH CONDITION
+        self.map.npc_list = list(filter(
+            lambda npc: npc.hp > 0,
+            self.map.npc_list
+        ))
         # REGENERATION
         return redraw
 

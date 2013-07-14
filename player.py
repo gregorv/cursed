@@ -31,6 +31,12 @@ class Player(Entity):
         self.skills = SkillSet()
         self.inventory = Inventory(self.game)
         self.wielded = None
+        self.symbol = "@"
+        self.style = self.game.style["player"]
+
+    def pre_round(self):
+        Entity.pre_round(self)
+        self.effective_skills.replace(skills)
 
     def handle_keypress(self, code, mod):
         move = (0, 0)
@@ -60,6 +66,7 @@ class Player(Entity):
                 if self.wielded:
                     self.wielded.on_wield_attack(detect)
                 else:
-                    detect.attack(self, self.skills["char.strength"])
+                    detect.attack(self, self.skills["char.strength"], None)
+                self.set_round_cooldown(10)
         return True
 

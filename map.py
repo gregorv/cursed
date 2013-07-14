@@ -24,8 +24,7 @@ import itertools
 import curses
 
 from item import Pile, Container, ItemRegistry
-#import character
-#from registry import NPCRegistry, ItemRegistry
+from npc import NPCRegistry
 
 
 class Map:
@@ -82,6 +81,16 @@ class Map:
             yield pos
             if self.data[pos[1]][pos[0]] == "#":
                 break
+
+    def get_los_unblocked(self, start, end):
+        """
+        Returns True if lone of sight between
+        start and end is unblocked.
+        """
+        for pos in self.get_los_fields(start, end):
+            if pos == end:
+                return True
+        return False
 
     def get_field_circle(self, center, radius):
         """
@@ -161,11 +170,11 @@ class Map:
            #and (x == self.pos_stairs_out[0]
            #and y == self.pos_stairs_out[1])):
             #return ">"
-        #for npc in self.npc_list:
-            #if npc == ignore:
-                #continue
-            #if x == npc.x and y == npc.y:
-                #return npc
+        for npc in self.npc_list:
+            if npc == ignore:
+                continue
+            if pos == npc.pos:
+                return npc
         if pos == self.game.player.pos:
             return self.game.player
         return None
@@ -283,11 +292,11 @@ class Map:
                           pile.render(),
                           curses.A_DIM)
         # draw NPCs (only if in view)
-        for pos, pile in self.item_piles.items():
-            scrcoord = coord(pos)
-            if in_scr(scrcoord) and pos in self._visible_area:
+        for npc in self.npc_list:
+            scrcoord = coord(npc.pos)
+            if in_scr(scrcoord) and npc.pos in self._visible_area:
                 scr.addch(scrcoord[0], scrcoord[1],
-                          pile.render())
+                          npc.symbol, npc.style)
         if in_scr(player_pos):
             scr.addch(player_pos[0], player_pos[1],
                       "@", self.game.style["player"])
@@ -300,6 +309,12 @@ class Map:
 class RandomDungeon(Map):
     def __init__(self, game, name, size):
         Map.__init__(self, game, name, (150, 150))
+
+    def populate(self, n=10):
+        for i in range(n):
+            npc = NPCRegistry.create(self.game, "Ant")
+            npc.pos = self.get_free_space()
+            self.npc_list.append(npc)
 
     def generate(self):
         self.data = [["#"]*(self.size[0]) for i in range(self.size[1])]
@@ -361,3 +376,4 @@ class RandomDungeon(Map):
                            random.randint(p[1]-30, p[1]+30)))
                          for i in range(random.randint(2, 6))]
             start_points.extend(new_rooms)
+        self.populate(50)

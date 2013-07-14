@@ -24,7 +24,8 @@ import math
 def standard_physical(attacker, defender, power, skill):
     askill = attacker.effective_skills
     dskill = defender.effective_skills
-    effective_str = askill["char.strength"] + askill[skill] * 2
+    skill = askill[skill] if skill else 0
+    effective_str = askill["char.strength"] + skill * 2
     return ((0.1 * effective_str**2 + effective_str)
             * math.exp(-dskill["char.defence"]/20)
             * power*0.1
@@ -34,9 +35,11 @@ def standard_physical(attacker, defender, power, skill):
 def standard_magic(attacker, defender, power, category_skill, spell_skill):
     askill = attacker.effective_skills
     dskill = defender.effective_skills
+    category_skill = askill[category_skill] if category_skill else 0
+    spell_skill = askill[spell_skill] if spell_skill else 0
     effective_mag = (askill["char.magic"]
-                     + 1.5*askill[category_skill]
-                     + 2*askill[spell_skill])
+                     + 1.5*category_skill
+                     + 2*spell_skill)
     return (effective_mag + power
             * math.exp(-dskill["char.spirit"]/20)
             * power*0.1

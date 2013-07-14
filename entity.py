@@ -34,8 +34,8 @@ class SkillSet:
         # internal name, default, base_exp, verbose_name, descr., cond
         "char.hp": (30, 25, None, "Health", "Maximum health points", lambda s: True),
         "char.mana": (1, 50, None, "Mana", "Maximum mana", lambda s: True),
-        "char.hp_regen": (1, 10, None, "HP Regen", "HP Regeneration rate", lambda s: True),
-        "char.mana_regen": (1, 10, None, "Mana Regen", "Mana Regeneration rate", lambda s: True),
+        "char.hp_regen": (0, 10, None, "HP Regen", "HP Regeneration rate", lambda s: True),
+        "char.mana_regen": (0, 10, None, "Mana Regen", "Mana Regeneration rate", lambda s: True),
         "char.strength": (1, 500, None, "Strength", "Physical attack strength", lambda s: True),
         "char.defence": (1, 1000, None, "Defence", "Defence against physical attacks", lambda s: True),
         "char.magic": (1, 3000, None, "Magic", "Magical strength", lambda s: True),
@@ -81,21 +81,40 @@ class SkillSet:
         self.skills = dict((s, d[0])
                            for s, d in SkillSet.skill_def.items())
 
-    def __index__(self, skill):
+    def __getitem__(self, skill):
         return self.skills[skill]
 
+    def replace(self, other_set):
+        for skill, level in other_set.items():
+            self.skills[skill] = level
 
-class Entity:
+
+class Entity(object):
     """
     Things knowing the concept of life and the space-time.
     """
     def __init__(self, game):
         self.game = game
-        self.hp = 100
         self.pos = (1, 1)
         self.symbol = " "
         self.round_cooldown = 0
         self.effective_skills = SkillSet()
+        self.hp = self.effective_skills["char.hp"]
+        self.mana = self.effective_skills["char.mana"]
+        self.symbol = ""
+        self.style = 0
+
+    def pre_round(self):
+        pass
+
+    def animate(self):
+        pass
+
+    def post_round(self):
+        self.hp = min(self.effective_skills["char.hp"],
+                      self.hp + self.effective_skills["char.hp_regen"])
+        self.mana = min(self.effective_skills["char.mana"],
+                        self.hp + self.effective_skills["char.mana_regen"])
 
     def set_round_cooldown(self, time_required):
         self.round_cooldown = int(time_required)
