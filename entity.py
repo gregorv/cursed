@@ -119,6 +119,10 @@ class SkillSet:
     def set_base_level(self, skill, level):
         self.skills[skill] = level
 
+    def can_level_skill(self, skill):
+        condition = SkillSet.skill_def[skill][5]
+        return condition(self) if condition else True
+
 
 class Entity(object):
     """

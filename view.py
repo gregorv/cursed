@@ -92,21 +92,29 @@ class SkillView(BaseView):
                 level_points = len(filter(lambda x: x == skill,
                                           player.level_skills))
                 exp_percent = 100.0*level_points/len(player.level_skills)
+                color = 0
+                if not base_skills.can_level_skill(skill):
+                    color = curses.color_pair(curses.COLOR_RED)
                 self.scr.addstr(y_off, x_off,
                                 base_skills.get_skill_name(skill),
-                                curses.A_REVERSE
-                                if sel_y == highlight
-                                else curses.A_NORMAL)
+                                (curses.A_REVERSE
+                                 if sel_y == highlight
+                                 else curses.A_NORMAL)
+                                + color)
                 self.scr.addstr(y_off, x_off+16,
-                                "{0:3d}".format(base_skills[skill]))
+                                "{0:3d}".format(base_skills[skill]),
+                                color)
                 self.scr.addstr(y_off, x_off+21,
-                                "{0:3d}".format(effective_skills[skill]))
+                                "{0:3d}".format(effective_skills[skill]),
+                                color)
                 self.scr.addstr(y_off, x_off+25,
-                                "{0:>3,.0f}%".format(exp_percent))
+                                "{0:>3,.0f}%".format(exp_percent),
+                                color)
                 self.scr.addstr(y_off, x_off+30,
                                 "{0:4d}"
                                 .format(base_skills
-                                        .get_exp_to_next_level(skill)))
+                                        .get_exp_to_next_level(skill)),
+                                color)
                 sel_y += 1
                 y_off += 1
                 if y_off >= self.max_y-2:
