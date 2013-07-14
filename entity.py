@@ -87,10 +87,23 @@ class SkillSet:
 
     def __getitem__(self, skill):
         return (self.base_level[skill]
-                + self.exp_list[skill] % SkillSet.skill_def[skill][1])
+                + self.exp_list[skill] // SkillSet.skill_def[skill][1])
+
+    def get_skills(self):
+        return list(self.base_level.keys())
+
+    def get_skill_name(self, skill):
+        return SkillSet.skill_def[skill][3]
+
+    def get_skill_desciption(self, skill):
+        return SkillSet.skill_def[skill][4]
 
     def get_exp(self, skill):
         return self.exp_list[skill]
+
+    def get_exp_to_next_level(self, skill):
+        return SkillSet.skill_def[skill][1] - \
+            self.exp_list[skill] % SkillSet.skill_def[skill][1]
 
     def add_exp(self, skill, exp):
         self.exp_list[skill] += exp
