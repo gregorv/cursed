@@ -49,6 +49,93 @@ class BaseView:
         self.scr.noutrefresh()
 
 
+class SkillView(BaseView):
+    def __init__(self, game, scr):
+        BaseView.__init__(self, game, scr)
+        self.cursor_pos = (1, 1)
+        self.categories = [
+            ("char.", "Character Skills"),
+            ("elemdef.", "Element Defence"),
+            ("weapon.", "General Weapon Skills"),
+            ("magic.", "General Magic Skills"),
+            ("spell.", "Spell Casting Skills"),
+        ]
+
+    def on_activate(self):
+        self.cursor_pos = (0, 0)
+
+    def render_column(self, y_off, x_off, categories, highlight=None):
+        player = self.game.player
+        base_skills = self.game.player.skills
+        effective_skills = self.game.player.effective_skills
+        sel_y = 0
+        for prefix, name in categories:
+            self.scr.addstr(y_off, x_off,
+                            name,
+                            curses.A_UNDERLINE)
+            y_off += 1
+            for skill in base_skills.get_skills():
+                if not skill.startswith(prefix):
+                    continue
+                level_points = len(filter(lambda x: x == skill,
+                                          player.level_skills))
+                exp_percent = 100.0*level_points/len(player.level_skills)
+                self.scr.addstr(y_off, x_off,
+                                base_skills.get_skill_name(skill),
+                                curses.A_REVERSE
+                                if sel_y == highlight
+                                else curses.A_NORMAL)
+                self.scr.addstr(y_off, x_off+16,
+                                "{0:3d}".format(base_skills[skill]))
+                self.scr.addstr(y_off, x_off+21,
+                                "{0:3d}".format(effective_skills[skill]))
+                self.scr.addstr(y_off, x_off+25,
+                                "{0:>3,.0f}%".format(exp_percent))
+                self.scr.addstr(y_off, x_off+30,
+                                "{0:4d}"
+                                .format(base_skills
+                                        .get_exp_to_next_level(skill)))
+                sel_y += 1
+                y_off += 1
+                if y_off >= self.max_y-2:
+                    break
+            y_off += 1
+            if y_off >= self.max_y-2:
+                break
+
+    def render_skills(self, highlight=None):
+        cat_half = len(self.categories)//2
+        l_highlight = None
+        r_highlight = None
+        if highlight:
+            if highlight[1] == 0:
+                l_highlight = highlight[0]
+            else:
+                r_highlight = highlight[0]
+        self.render_column(2, 1,
+                           self.categories[:cat_half],
+                           l_highlight
+                           )
+        self.render_column(2, self.max_x//2+1,
+                           self.categories[cat_half:],
+                           r_highlight
+                           )
+        self.scr.addstr(0, 10,
+                        "Skills", curses.A_BOLD)
+
+    def handle_keypress(self, code, mod):
+        if False:
+            pass
+        else:
+            return BaseView.handle_keypress(self, code, mod)
+        return True
+
+    def draw(self):
+        self.scr.clear()
+        self.render_skills((3, 1))
+        self.scr.noutrefresh()
+
+
 class ItemView(BaseView):
     def __init__(self, game, scr):
         BaseView.__init__(self, game, scr)
