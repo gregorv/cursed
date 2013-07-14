@@ -19,11 +19,14 @@ from __future__ import division
 """
 
 from .itembase import Item, ItemWieldable
+import fightsystem
+
 
 class Sword(Item, ItemWieldable):
     def __init__(self, game):
         Item.__init__(self, game)
         ItemWieldable.__init__(self)
+        self.attack_power = 5
 
     def get_attack_struct(self):
         sword_lvl = self.wielder.skill_set["sword"]
@@ -35,6 +38,22 @@ class Sword(Item, ItemWieldable):
         }
 
     def on_wield_attack(self, target):
-        if hasattr(self.wielder, "skill_set"):
-            self.wielder.skill_set.use("sword")
-            self.target.damage(self.get_attack_struct())
+        self.wielder.effective_skills.use("weapon.sword")
+        dmg = fightsystem.standard_physical(self.wielder,
+                                            target,
+                                            self.attack_power,
+                                            "weapon.sword")
+        dmg = fightsystem.status_effect(self, target, dmg)
+        target.hp = int(max(0, target.hp - dmg))
+        return target.hp == 0
+
+
+class WoodenSword(Sword):
+    weight = 4
+    value = 10
+    symbol = "t"
+    name = "Wooden Sword"
+
+    def __init__(self, game):
+        Sword.__init__(self, game)
+        self.attack_power = 10

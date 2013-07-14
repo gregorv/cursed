@@ -79,7 +79,7 @@ class ItemModifyable:
 
 
 class ItemWieldable:
-    def __init__(self, game):
+    def __init__(self):
         self.wielder = None
 
     def on_wield_attack(self, target):

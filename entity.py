@@ -81,13 +81,18 @@ class SkillSet:
         self.skills = dict((s, d[0])
                            for s, d in SkillSet.skill_def.items())
 
+        self.skill_usage = dict((s, 0)
+                                for s in SkillSet.skill_def.keys())
+
     def __getitem__(self, skill):
         return self.skills[skill]
 
-    def replace(self, other_set):
-        for skill, level in other_set.items():
+    def replace_levels(self, other_set):
+        for skill, level in other_set.skills.items():
             self.skills[skill] = level
 
+    def use(self, skill):
+        self.skill_usage[skill] += 1
 
 class Entity(object):
     """
