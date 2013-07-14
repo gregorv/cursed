@@ -19,6 +19,7 @@ from __future__ import division
 """
 
 import curses
+import item
 from map import Map
 
 
@@ -59,7 +60,11 @@ class ItemView(BaseView):
         self.item_container = container
         self.selection = []
 
-    def render_items(self):
+    def render_items(self, filter_expr=None):
+        if filter_expr:
+            items = filter(filter_expr, self.item_container.items)
+        else:
+            items = self.item_container.items
         items = list(sorted(self.item_container.items,
                             key=lambda x: x.name))
         left = True
@@ -140,6 +145,45 @@ class PickupItems(ItemView):
         self.scr.addstr(self.max_y-1, 1, "^a select everything   , pick selected items", curses.A_BOLD)
         self.scr.noutrefresh()
 
+class WieldWeapon(ItemView):
+    def on_activate(self):
+        ItemView.on_activate(self, self.game.player.inventory)
+        #weap_cnt = len(filter(lambda x: isinstance(x, item.ItemWieldable),
+                              #self.item_container.items))
+        #if weap_cnt == 0:
+            ## TODO log warning
+            #self.game.set_view()
+
+    def handle_keypress(self, code, mod):
+        if not mod:
+            for i in self.item_container.items:
+                if(i.hotkey != code
+                   and not isinstance(i, item.ItemWieldable)):
+                    continue
+                cur_wielded = self.game.player.wielded
+                if cur_wielded:
+                    cur_wielded.wielder = None
+                    self.game.player.inventory.add(cur_wielded)
+                self.game.player.wielded = i
+                i.wielder = self.game.player
+                self.game.set_view()
+                return True
+        elif self.game.keymap("view.wieldweapon.unwield", code, mod):
+            cur_wielded = self.game.player.wielded
+            if cur_wielded:
+                cur_wielded.wielder = None
+                self.game.player.inventory.add(cur_wielded)
+            self.game.set_view()
+            return True
+        return ItemView.handle_keypress(self, code, mod)
+
+    def draw(self):
+        self.scr.clear()
+        self.scr.addstr(0, 10, "Select weapon to wield", curses.A_BOLD)
+        self.render_items(lambda x: isinstance(x, item.ItemWieldable))
+        self.scr.addstr(0, 10, "- unwield")
+        self.scr.noutrefresh()
+
 
 class MapOverview(BaseView):
     def __init__(self, game, scr):
@@ -183,6 +227,8 @@ class Play(BaseView):
         else:
             if self.game.keymap("view.play.inventory", code, mod):
                 self.game.set_view("Inventory")
+            if self.game.keymap("view.play.wield", code, mod):
+                self.game.set_view("WieldWeapon")
             elif self.game.keymap("view.play.mapoverview", code, mod):
                 self.game.set_view("MapOverview")
             else:

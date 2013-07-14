@@ -18,23 +18,23 @@ from __future__ import division
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-from .itembase import Item, ItemStackable
+from .itembase import Item, ItemWieldable
 
-
-class Comestible(Item, ItemStackable):
-    symbol = "%"
-
+class Sword(Item, ItemWieldable):
     def __init__(self, game):
         Item.__init__(self, game)
-        ItemStackable.__init__(self)
+        ItemWieldable.__init__(self)
 
-    def on_ingest(self, ingester):
-        pass
+    def get_attack_struct(self):
+        sword_lvl = self.wielder.skill_set["sword"]
+        strength = self.wielder.skill_set["strength"]
+        return {
+            "damage": sword_lvl*5 + strength,
+            "status": {},
+            "elemental": {}
+        }
 
-
-class Apple(Comestible):
-    name = "Apple"
-    weight = 1
-    value = 5
-    symbol = "%"
-    heal = 5
+    def on_wield_attack(self, target):
+        if hasattr(self.wielder, "skill_set"):
+            self.wielder.skill_set.use("sword")
+            self.target.damage(self.get_attack_struct())
