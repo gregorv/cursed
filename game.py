@@ -64,14 +64,10 @@ class Game:
 
         self.views = {}
 
-        screen_factory = [view.Play, view.Inventory,
-                          view.PickupItems, view.MapOverview,
-                          view.WieldWeapon]
-
-        for i, scr in enumerate(screen_factory):
-            tmp = scr(self, self.stdscr)
-            self.views[tmp.name] = tmp
-            if i == 0:
+        for name, View in ViewRegistry.classes.items():
+            tmp = View(self, self.stdscr)
+            self.views[name] = tmp
+            if name == "Play":
                 self.play_view = tmp
         self.current_view = self.play_view
 

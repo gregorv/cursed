@@ -23,7 +23,19 @@ import item
 from map import Map
 
 
+class ViewRegistry(type):
+    classes = {}
+
+    def __new__(self, name, bases, dict):
+        tmp = type.__new__(self, name, bases, dict)
+        if name != "BaseView":
+            self.classes[name] = tmp
+        return tmp
+
+
 class BaseView:
+    __metaclass__ = ViewRegistry
+
     def __init__(self, game, scr):
         self.scr = scr
         self.game = game
