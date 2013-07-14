@@ -78,21 +78,34 @@ class SkillSet:
 
     def __init__(self):
         # initialize with default values
-        self.skills = dict((s, d[0])
-                           for s, d in SkillSet.skill_def.items())
-
+        self.base_level = dict((s, d[0])
+                               for s, d in SkillSet.skill_def.items())
         self.skill_usage = dict((s, 0)
                                 for s in SkillSet.skill_def.keys())
+        self.exp_list = dict((s, 0)
+                             for s in SkillSet.skill_def.keys())
 
     def __getitem__(self, skill):
-        return self.skills[skill]
+        return (self.base_level[skill]
+                + self.exp_list[skill] % SkillSet.skill_def[skill][1])
+
+    def get_exp(self, skill):
+        return self.exp_list[skill]
+
+    def add_exp(self, skill, exp):
+        self.exp_list[skill] += exp
 
     def replace_levels(self, other_set):
-        for skill, level in other_set.skills.items():
-            self.skills[skill] = level
+        for skill, level in other_set.base_level.items():
+            self.base_level[skill] = level
+            self.exp_list[skill] = other_set.get_exp(skill)
 
     def use(self, skill):
         self.skill_usage[skill] += 1
+
+    def set_base_level(self, skill, level):
+        self.skills[skill] = level
+
 
 class Entity(object):
     """
@@ -108,6 +121,7 @@ class Entity(object):
         self.mana = self.effective_skills["char.mana"]
         self.symbol = ""
         self.style = 0
+        self.level = 1
 
     def pre_round(self):
         pass
