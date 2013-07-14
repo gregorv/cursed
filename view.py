@@ -320,6 +320,8 @@ class Play(BaseView):
                 self.game.set_view("WieldWeapon")
             elif self.game.keymap("view.play.mapoverview", code, mod):
                 self.game.set_view("MapOverview")
+            elif self.game.keymap("view.play.skills", code, mod):
+                self.game.set_view("SkillView")
             else:
                 return False
             return True
