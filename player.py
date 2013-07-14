@@ -21,6 +21,7 @@ from __future__ import division
 from entity import Entity, SkillSet
 from item import Inventory
 import math
+import fightsystem
 
 
 class Player(Entity):
@@ -36,7 +37,19 @@ class Player(Entity):
 
     def pre_round(self):
         Entity.pre_round(self)
-        self.effective_skills.replace(skills)
+        self.effective_skills.replace_levels(self.skills)
+
+    def attack(self, target):
+        if self.wielded:
+            self.wielded.on_wield_attack(target)
+        else:
+            dmg = fightsystem.standard_physical(self,
+                                                target,
+                                                5,
+                                                None)
+            dmg = fightsystem.status_effect(self, target, dmg)
+            target.hp = int(max(0, target.hp - dmg))
+        self.set_round_cooldown(10)
 
     def handle_keypress(self, code, mod):
         move = (0, 0)
@@ -65,10 +78,6 @@ class Player(Entity):
                 self.set_round_cooldown(math.sqrt((10*move[0])**2
                                                   + (10*move[1])**2))
             elif isinstance(detect, Entity):
-                if self.wielded:
-                    self.wielded.on_wield_attack(detect)
-                else:
-                    detect.attack(self, self.skills["char.strength"], None)
-                self.set_round_cooldown(10)
+                self.attack(detect)
         return True
 
