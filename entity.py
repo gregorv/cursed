@@ -90,7 +90,8 @@ class SkillSet:
                 + self.exp_list[skill] // SkillSet.skill_def[skill][1])
 
     def get_skills(self):
-        return list(self.base_level.keys())
+        return list(sorted(self.base_level.keys(),
+                    key=lambda x: self.get_exp_per_level(x)))
 
     def get_skill_name(self, skill):
         return SkillSet.skill_def[skill][3]
@@ -100,6 +101,9 @@ class SkillSet:
 
     def get_exp(self, skill):
         return self.exp_list[skill]
+
+    def get_exp_per_level(self, skill):
+        return SkillSet.skill_def[skill][1]
 
     def get_exp_to_next_level(self, skill):
         return SkillSet.skill_def[skill][1] - \
