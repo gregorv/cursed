@@ -238,6 +238,38 @@ class Play(BaseView):
     def draw(self):
         self.scr.clear()
         yx = self.scr.getmaxyx()
-        self.game.map.render(self.scr, (0, 0), (yx[0]-6, yx[1]//2))
+        self.game.map.render(self.scr, (0, 0), (yx[0]-6, yx[1]-50))
+
+        def display_bar(y, x, width, val, max, color_a, color_b):
+            full = int(width*val/max)
+            if full > 0:
+                self.scr.addstr(y, x, "*"*full, color_a)
+            if width-full > 0:
+                self.scr.addstr(y, x+full, "."*(width-full), color_b)
+        p = self.game.player
+        display_bar(yx[0]-5, 1, 9, p.hp, p.effective_skills["char.hp"],
+                    curses.color_pair(curses.COLOR_GREEN),
+                    curses.color_pair(curses.COLOR_WHITE))
+        display_bar(yx[0]-4, 1, 9, p.mana, p.effective_skills["char.mana"],
+                    curses.color_pair(curses.COLOR_YELLOW),
+                    curses.color_pair(curses.COLOR_WHITE))
+        self.scr.addstr(yx[0]-5, 9,
+                        "{0:->9}  Str{1:3d}  Def{2:3d}"
+                        .format("{0}/{1}"
+                                .format(p.hp,
+                                        p.effective_skills["char.hp"]
+                                        ),
+                                p.effective_skills["char.strength"],
+                                p.effective_skills["char.defence"],
+                                ))
+        self.scr.addstr(yx[0]-4, 9,
+                        "{0:->9}  Mag{1:3d}  Spr{2:3d}"
+                        .format("{0}/{1}"
+                                .format(p.mana,
+                                        p.effective_skills["char.mana"]
+                                        ),
+                                p.effective_skills["char.magic"],
+                                p.effective_skills["char.spirit"],
+                                ))
         self.scr.addstr(yx[0]-2, 1, "Round {0:.1f}".format(self.game.round/10))
         self.scr.noutrefresh()
