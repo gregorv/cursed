@@ -48,6 +48,8 @@ class Player(Entity):
         elif self.game.keymap("player.nw", code, mod): move = (-1, -1)
         elif self.game.keymap("player.se", code, mod): move = (1, 1)
         elif self.game.keymap("player.sw", code, mod): move = (-1, 1)
+        elif self.game.keymap("player.wait", code, mod):
+            self.set_round_cooldown(10)
         elif self.game.keymap("player.pickup", code, mod):
             if self.pos in self.game.map.item_piles:
                 self.game.set_view("PickupItems",
