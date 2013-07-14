@@ -158,6 +158,9 @@ class Game:
         return True
 
     def perform_microround(self):
+        self.player.pre_round()
+        for npc in self.map.npc_list:
+            npc.pre_round()
         redraw = False
         self.round += 1
         self.player.round_cooldown -= 1
@@ -174,6 +177,9 @@ class Game:
             self.map.npc_list
         ))
         # REGENERATION
+        self.player.post_round()
+        for npc in self.map.npc_list:
+            npc.post_round()
         return redraw
 
     def run(self):

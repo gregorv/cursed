@@ -52,7 +52,7 @@ class NPC(Entity):
     def attack_enemy(self, target):
         dmg = fightsystem.standard_physical(self, target, self.attack_power, None)
         dmg = fightsystem.status_effect(self, target, dmg)
-        target.hp = max(0, target.hp - dmg)
+        target.hp = int(max(0, target.hp - dmg))
 
     def animate(self):
         if self.random_target is not None:
@@ -130,4 +130,5 @@ class Ant(NPC):
     def __init__(self, game):
         NPC.__init__(self, game)
         self.style = self.game.style["player"]
+        self.hp = 5
         self.symbol = "a"
