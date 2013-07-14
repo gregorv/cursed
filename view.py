@@ -174,6 +174,7 @@ class WieldWeapon(ItemView):
                 cur_wielded.wielder = None
                 self.game.player.inventory.add(cur_wielded)
             self.game.set_view()
+            self.game.player.wielded = None
             return True
         return ItemView.handle_keypress(self, code, mod)
 
