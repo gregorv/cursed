@@ -21,6 +21,10 @@
 class Registry(type):
     classes = {}
 
+    @classmethod
+    def check_validity(cls, name, bases, dict):
+        return True
+
     def __new__(self, name, bases, dict):
         cls = type.__new__(self, name, bases, dict)
         if self.check_validity(name, bases, dict):

@@ -50,9 +50,7 @@ class NPC(Entity):
         self.view_range = self.__class__.view_range
 
     def attack_enemy(self, target):
-        dmg = fightsystem.standard_physical(self, target, self.attack_power, None)
-        dmg = fightsystem.status_effect(self, target, dmg)
-        target.hp = int(max(0, target.hp - dmg))
+        target.hp = int(max(0, target.hp - self.attack_power))
 
     def animate(self):
         if self.random_target is not None:
@@ -125,10 +123,10 @@ class NPC(Entity):
 class Ant(NPC):
     name = "Ant"
     view_range = 4
-    attack_power = 4
+    attack_power = 5
 
     def __init__(self, game):
         NPC.__init__(self, game)
         self.style = self.game.style["player"]
-        self.hp = 5
+        self.hp = 10
         self.symbol = "a"

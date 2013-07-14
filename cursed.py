@@ -28,7 +28,9 @@ def start_game(stdscr, args):
     curses.curs_set(0)
     game = Game(stdscr, extra_config=args["c"])
     if "u" in args:
-        game.player.name = args["u"]
+        game.player_name = args["u"]
+    else:
+        game.player_name = "Horst"
     game.run()
 
 if __name__ == "__main__":

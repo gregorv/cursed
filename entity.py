@@ -121,7 +121,7 @@ class SkillSet:
         self.skill_usage[skill] += 1
 
     def set_base_level(self, skill, level):
-        self.skills[skill] = level
+        self.base_level[skill] = level
 
     def can_level_skill(self, skill):
         condition = SkillSet.skill_def[skill][5]
@@ -151,6 +151,9 @@ class Entity(object):
         pass
 
     def post_round(self):
+        pass
+
+    def regenerate(self):
         self.hp = min(self.effective_skills["char.hp"],
                       self.hp + self.effective_skills["char.hp_regen"])
         self.mana = min(self.effective_skills["char.mana"],

@@ -26,6 +26,7 @@ from view import ViewRegistry
 from map import Map, RandomDungeon
 from player import Player
 from keymapping import Keymapping
+from item import ItemRegistry
 
 
 class Game:
@@ -51,15 +52,11 @@ class Game:
         self.stdscr = stdscr
         self.stdscr.resize(25, 80)
 
-        self.player = Player(self)
+        self.map = None
+        self.player = None
 
         self.quit = False
-
-        self.map = RandomDungeon(self, "1", (200, 200))
-        self.map.generate()
-
-        self.player.pos = self.map.get_free_space()
-
+        self.game_initialized = False
         self.round = 0
 
         self.views = {}
@@ -69,7 +66,20 @@ class Game:
             self.views[name] = tmp
             if name == "Play":
                 self.play_view = tmp
-        self.current_view = self.play_view
+            elif name == "StartMenu":
+                self.current_view = tmp
+
+    def initialize_game(self):
+        self.player = Player(self)
+        sword = ItemRegistry.create(self, "WoodenSword")
+        self.player.inventory.add(sword)
+        self.map = RandomDungeon(self, "1", (200, 200))
+        self.map.generate()
+        self.player.pos = self.map.get_free_space()
+        self.game_initialized = True
+
+        self.player.skills.set_base_level("char.hp_regen", 3)
+        self.player.skills.set_base_level("char.mana_regen", 1)
 
     def _setup_styles(self):
         # get color and attribute numbers from curses
@@ -168,23 +178,32 @@ class Game:
                 npc.round_cooldown -= 1
         # UPDATE PARTICLES
         # DEATH CONDITION
+        if self.player.hp <= 0:
+            return
         self.map.npc_list = list(filter(
             lambda npc: npc.hp > 0,
             self.map.npc_list
         ))
-        # REGENERATION
         self.player.post_round()
         for npc in self.map.npc_list:
             npc.post_round()
         return redraw
 
+    def perform_round(self):
+        self.player.regenerate()
+        for npc in self.map.npc_list:
+            npc.regenerate()
+
     def run(self):
         redraw = True
         while not self.quit:
-            if redraw or not self.player.round_cooldown:
+            if(self.game_initialized
+               and (redraw or not self.player.round_cooldown)):
                 self.map.update()
                 self.current_view.draw()
-            if not self.player.round_cooldown:
+            elif not self.game_initialized:
+                self.current_view.draw()
+            if not self.game_initialized or not self.player.round_cooldown:
                 curses.doupdate()
                 mod = False
                 code = self.stdscr.getkey()
@@ -193,5 +212,7 @@ class Game:
                     while code == "\x1b":
                         code = self.stdscr.getkey()
                 redraw = self.handle_keypress(code, mod)
-            else:
+            elif self.game_initialized:
                 redraw = self.perform_microround()
+                if self.round % 10 == 0:
+                    self.perform_round()
