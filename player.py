@@ -34,10 +34,18 @@ class Player(Entity):
         self.wielded = None
         self.symbol = "@"
         self.style = self.game.style["player"]
+        self.exp = 0
+        self.level_skills = ["char.hp"]
 
     def pre_round(self):
         Entity.pre_round(self)
         self.effective_skills.replace_levels(self.skills)
+
+    def exp_next_level(self):
+        return 1000
+
+    def exp_this_level(self):
+        return self.exp % self.exp_next_level()
 
     def attack(self, target):
         if self.wielded:
@@ -50,6 +58,18 @@ class Player(Entity):
             dmg = fightsystem.status_effect(self, target, dmg)
             target.hp = int(max(0, target.hp - dmg))
         self.set_round_cooldown(10)
+        if target.hp <= 0:
+            self.exp += int(100*math.exp(-(self.level - target.level)))
+            self.level_up()
+
+    def level_up(self):
+        exp_level = (self.exp // self.exp_next_level()) + 1
+        # loop for multiple levelups (extremely many exp?!)
+        while self.level < exp_level:
+            self.level += 1
+            exp_per_skill = int(round(1000/len(self.level_skills)))
+            for skill in self.level_skills:
+                self.skills.add_exp(skill, exp_per_skill)
 
     def handle_keypress(self, code, mod):
         move = (0, 0)

@@ -145,6 +145,7 @@ class PickupItems(ItemView):
         self.scr.addstr(self.max_y-1, 1, "^a select everything   , pick selected items", curses.A_BOLD)
         self.scr.noutrefresh()
 
+
 class WieldWeapon(ItemView):
     def on_activate(self):
         ItemView.on_activate(self, self.game.player.inventory)
@@ -272,5 +273,9 @@ class Play(BaseView):
                                 p.effective_skills["char.magic"],
                                 p.effective_skills["char.spirit"],
                                 ))
+        self.scr.addstr(yx[0]-3, 1, "Level {0:3d}  Exp {1}/{2}"
+                        .format(p.level,
+                                p.exp_this_level(),
+                                p.exp_next_level()))
         self.scr.addstr(yx[0]-2, 1, "Round {0:.1f}".format(self.game.round/10))
         self.scr.noutrefresh()
