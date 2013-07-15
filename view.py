@@ -110,6 +110,8 @@ class SkillView(BaseView):
     def __init__(self, game, scr):
         BaseView.__init__(self, game, scr)
         self.cursor_pos = (1, 1)
+        self.scroll_offset = 0
+        self.max_skill_view_height = self.max_y-3
         self.categories = [
             ("char.", "Character Skills"),
             ("elemdef.", "Element Defence"),
@@ -120,19 +122,80 @@ class SkillView(BaseView):
 
     def on_activate(self):
         self.cursor_pos = (0, 0)
+        s = self.game.player.skills
+        cat_half = len(self.categories)//2
+
+        def num_skills_in_column(cat):
+            num = 0
+            for prefix, name in cat:
+                num += sum(1 for k in s.get_skills()
+                           if k.startswith(prefix))
+            return num
+        self.cursor_max_y = [num_skills_in_column(self.categories[:cat_half]),
+                             num_skills_in_column(self.categories[cat_half:])]
+        self.skill_cursor_data = [
+            self.calc_skill_cursor_data(self.categories[:cat_half]),
+            self.calc_skill_cursor_data(self.categories[cat_half:])
+        ]
+        self.scroll_offset = 0
+
+    def calc_skill_cursor_data(self, categories):
+        sel_y = 0
+        draw_y = 0
+        base_skills = self.game.player.skills
+        data = []
+        for prefix, name in categories:
+            data.append((name, draw_y, None))
+            draw_y += 1
+            for skill in base_skills.get_skills():
+                if not skill.startswith(prefix):
+                    continue
+                data.append((skill, draw_y, sel_y))
+                sel_y += 1
+                draw_y += 1
+            draw_y += 1
+        return data
+
+    def selected_skill_position(self, cursor):
+        """
+        returns 0: in view
+        1: below view, scroll down
+        -1: above view, scroll up
+        """
+        for name, draw_y, sel_y in self.skill_cursor_data[cursor[1]]:
+            if sel_y == cursor[0]:
+                if draw_y-self.scroll_offset < 0:
+                    return -1
+                elif(draw_y-self.scroll_offset
+                     >= self.max_skill_view_height):
+                    return 1
+                else:
+                    return 0
+
+    def get_selected_skill(self):
+        for name, draw_y, sel_y in self.skill_cursor_data[self.cursor_pos[1]]:
+            if sel_y == self.cursor_pos[0]:
+                return name
 
     def render_column(self, y_off, x_off, categories, highlight=None):
+        draw_y = y_off
+        draw_y -= self.scroll_offset
         player = self.game.player
         base_skills = self.game.player.skills
         effective_skills = self.game.player.effective_skills
         sel_y = 0
         for prefix, name in categories:
-            self.scr.addstr(y_off, x_off,
-                            name,
-                            curses.A_UNDERLINE)
-            y_off += 1
+            if draw_y >= y_off:
+                self.scr.addstr(draw_y, x_off,
+                                name,
+                                curses.A_UNDERLINE)
+            draw_y += 1
             for skill in base_skills.get_skills():
                 if not skill.startswith(prefix):
+                    continue
+                if draw_y < y_off:
+                    draw_y += 1
+                    sel_y += 1
                     continue
                 level_points = len(filter(lambda x: x == skill,
                                           player.level_skills))
@@ -140,32 +203,32 @@ class SkillView(BaseView):
                 color = 0
                 if not base_skills.can_level_skill(skill):
                     color = curses.color_pair(curses.COLOR_RED)
-                self.scr.addstr(y_off, x_off,
+                self.scr.addstr(draw_y, x_off,
                                 base_skills.get_skill_name(skill),
                                 (curses.A_REVERSE
                                  if sel_y == highlight
                                  else curses.A_NORMAL)
                                 + color)
-                self.scr.addstr(y_off, x_off+16,
+                self.scr.addstr(draw_y, x_off+16,
                                 "{0:3d}".format(base_skills[skill]),
                                 color)
-                self.scr.addstr(y_off, x_off+21,
+                self.scr.addstr(draw_y, x_off+21,
                                 "{0:3d}".format(effective_skills[skill]),
                                 color)
-                self.scr.addstr(y_off, x_off+25,
+                self.scr.addstr(draw_y, x_off+25,
                                 "{0:>3,.0f}%".format(exp_percent),
                                 color)
-                self.scr.addstr(y_off, x_off+30,
+                self.scr.addstr(draw_y, x_off+30,
                                 "{0:4d}"
                                 .format(base_skills
                                         .get_exp_to_next_level(skill)),
                                 color)
                 sel_y += 1
-                y_off += 1
-                if y_off >= self.max_y-2:
+                draw_y += 1
+                if draw_y >= self.max_skill_view_height + y_off:
                     break
-            y_off += 1
-            if y_off >= self.max_y-2:
+            draw_y += 1
+            if draw_y >= self.max_skill_view_height + y_off:
                 break
 
     def render_skills(self, highlight=None):
@@ -189,15 +252,57 @@ class SkillView(BaseView):
                         "Skills", curses.A_BOLD)
 
     def handle_keypress(self, code, mod):
-        if False:
-            pass
+        if not mod and code == "h":
+            self.cursor_pos = (self.cursor_pos[0],
+                               self.cursor_pos[1]-1)
+        elif not mod and code == "l":
+            self.cursor_pos = (self.cursor_pos[0],
+                               self.cursor_pos[1]+1)
+        elif not mod and code == "k":
+            self.cursor_pos = (self.cursor_pos[0]-1,
+                               self.cursor_pos[1])
+        elif not mod and code == "j":
+            self.cursor_pos = (self.cursor_pos[0]+1,
+                               self.cursor_pos[1])
+            #self.cursor_pos = (min(self.cursor_pos[0]+1,
+                                   #self.cursor_max_y[self.cursor_pos[1]]),
+                               #self.cursor_pos[1])
+        elif not mod and code == "+":
+            skill = self.get_selected_skill()
+            base_skills = self.game.player.skills
+            if base_skills.can_level_skill(skill):
+                self.game.player.level_skills.append(skill)
+        elif not mod and code == "-":
+            skill = self.get_selected_skill()
+            base_skills = self.game.player.skills
+            if(base_skills.can_level_skill(skill)
+               and len(self.game.player.level_skills)) > 1:
+                try:
+                    self.game.player.level_skills.remove(skill)
+                except Exception:
+                    pass
         else:
             return BaseView.handle_keypress(self, code, mod)
+        self.cursor_pos = (self.cursor_pos[0],
+                           max(0, min(1, self.cursor_pos[1])))
+        self.cursor_pos = (max(0, min(self.cursor_max_y[self.cursor_pos[1]]-1,
+                                      self.cursor_pos[0])),
+                           self.cursor_pos[1])
+        # minimize top distance to top -> show headlines
+        self.scroll_offset = 0
+        pos = self.selected_skill_position(self.cursor_pos)
+        while pos != 0:
+            self.scroll_offset += pos
+            pos = self.selected_skill_position(self.cursor_pos)
         return True
 
     def draw(self):
         self.scr.clear()
-        self.render_skills((3, 1))
+        self.render_skills(self.cursor_pos)
+        #for y in range(2, self.max_skill_view_height+2):
+            #self.scr.addch(y, self.max_x-1, "#",
+                           #curses.color_pair(curses.COLOR_WHITE
+                                             #+ 8*curses.COLOR_WHITE))
         self.scr.noutrefresh()
 
 
