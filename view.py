@@ -373,27 +373,37 @@ class WieldWeapon(ItemView):
             ## TODO log warning
             #self.game.set_view()
 
+    def wieldable_items(self):
+        for it in self.item_container.items:
+            if not isinstance(it, item.ItemWieldable):
+                continue
+            yield it
+
     def handle_keypress(self, code, mod):
         if not mod:
-            for i in self.item_container.items:
-                if(i.hotkey != code
-                   and not isinstance(i, item.ItemWieldable)):
+            for i in self.wieldable_items():
+                if i.hotkey != code:
                     continue
                 cur_wielded = self.game.player.wielded
+                if i == cur_wielded:
+                    continue
                 if cur_wielded:
                     cur_wielded.wielder = None
                     self.game.player.inventory.add(cur_wielded)
                 self.game.player.wielded = i
                 i.wielder = self.game.player
+                self.game.player.inventory.remove(i)
+                self.game.player.set_round_cooldown(10 if cur_wielded else 5)
                 self.game.set_view()
                 return True
-        elif self.game.keymap("view.wieldweapon.unwield", code, mod):
+        if self.game.keymap("view.wieldweapon.unwield", code, mod):
             cur_wielded = self.game.player.wielded
             if cur_wielded:
                 cur_wielded.wielder = None
                 self.game.player.inventory.add(cur_wielded)
-            self.game.set_view()
+                self.game.player.set_round_cooldown(5)
             self.game.player.wielded = None
+            self.game.set_view()
             return True
         return ItemView.handle_keypress(self, code, mod)
 
@@ -401,7 +411,7 @@ class WieldWeapon(ItemView):
         self.scr.clear()
         self.scr.addstr(0, 10, "Select weapon to wield", curses.A_BOLD)
         self.render_items(lambda x: isinstance(x, item.ItemWieldable))
-        self.scr.addstr(0, 10, "- unwield")
+        self.scr.addstr(self.max_y-1, 10, "- unwield")
         self.scr.noutrefresh()
 
 
