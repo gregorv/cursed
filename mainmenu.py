@@ -28,6 +28,7 @@ class StartMenu:
         self.continue_game = False
         self.quit = False
         self.no_savegame = False
+        self.max_y, self.max_x = scr.getmaxyx()
 
     def handle_keypress(self, code, mod):
         if self.state == "main":
@@ -55,28 +56,30 @@ class StartMenu:
 
     def draw(self):
         self.scr.clear()
-        self.scr.addstr(0, 0,
-"""      ____
+        self.scr.addstr(1, 0,
+"""      ____                        _
      / ___|   _ _ __ ___  ___  __| |
     | |  | | | | '__/ __|/ _ \/ _` |
     | |__| |_| | |  \__ \  __/ (_| |
      \____\__,_|_|  |___/\___|\__,_|""",
                         curses.A_BOLD)
-        self.scr.addstr(5, 0, "    A Python based rouge-like")
+        self.scr.addstr(6, 0, "    A Python based rouge-like")
+        self.scr.addstr(7, 0, "    GNU AGPL (C) 2013 Gregor Vollmer")
+        self.scr.addstr(8, 0, "    http://cursed.dynamic-noise.net")
         if self.state == "main":
             if not self.no_savegame:
-                self.scr.addstr(8, 1,
+                self.scr.addstr(10, 2,
                                 "c) Continue last game")
-            self.scr.addstr(9, 1,
+            self.scr.addstr(11, 2,
                             "p) Start new game")
-            self.scr.addstr(10, 1,
+            self.scr.addstr(12, 2,
                             "h) Read Documentation")
-            self.scr.addstr(11, 1,
+            self.scr.addstr(13, 2,
                             "q) Quit")
         elif self.state == "overwrite_warning":
-            self.scr.addstr(6, 1, "Warning!", curses.A_BOLD)
-            self.scr.addstr(6, 10, "This will delete your previous savegame.")
-            self.scr.addstr(7, 1, "Continue? (y/n)")
+            self.scr.addstr(10, 2, "Warning!", curses.A_BOLD)
+            self.scr.addstr(10, 11, "This will delete your previous savegame.")
+            self.scr.addstr(11, 2, "Continue? (y/n)")
         self.scr.refresh()
 
 
