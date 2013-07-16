@@ -119,6 +119,12 @@ class NPC(Entity):
                     self.set_round_cooldown(10)
                     return
 
+    def __getstate__(self):
+        return self.__dict__
+    
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+
 
 class Ant(NPC):
     name = "Ant"

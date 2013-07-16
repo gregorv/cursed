@@ -28,24 +28,22 @@ def init(stdscr, args):
     curses.cbreak()
     curses.curs_set(0)
     menu = StartMenu(stdscr)
+    game = Game(stdscr, extra_config=args["c"])
+    if "u" in args:
+        game.player_name = args["u"]
+    else:
+        game.player_name = "Horst"
+    game.savefile = args["s"]
     while True:
         menu.draw()
         ch = stdscr.getkey()
         menu.handle_keypress(ch, False)
         if menu.new_game:
-            game = Game(stdscr, extra_config=args["c"])
-            if "u" in args:
-                game.player_name = args["u"]
-            else:
-                game.player_name = "Horst"
+            game.initialize()
             game.run()
             break
         elif menu.continue_game:
-            game = Game(stdscr, extra_config=args["c"])
-            if "u" in args:
-                game.player_name = args["u"]
-            else:
-                game.player_name = "Horst"
+            game.recover_savegame()
             game.run()
             break
         if menu.quit:

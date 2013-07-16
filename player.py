@@ -22,7 +22,7 @@ from entity import Entity, SkillSet
 from item import Inventory
 import math
 import fightsystem
-
+import json
 
 class Player(Entity):
     def __init__(self, game):
@@ -35,6 +35,11 @@ class Player(Entity):
         self.style = self.game.style["player"]
         self.exp = 0
         self.level_skills = ["char.hp"]
+
+    def __setstate__(self, state):
+        sk = self.skills
+        self.skills = SkillSet()
+        self.skills.__setstate__(sk)
 
     def pre_round(self):
         Entity.pre_round(self)

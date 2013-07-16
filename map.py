@@ -40,6 +40,12 @@ class Map:
         self.discovered = [[" "]*self.size[0] for i in range(self.size[1])]
         self._visible_area = []
 
+    def __getstate__(self):
+        return dict((k, v) for k, v in self.__dict__.items() if k != "game")
+
+    def __setstate__(self, state):
+        self.__dict__(state)
+
     def update(self):
         self._update_discovery()
         self.item_piles = dict(filter(lambda x: len(x[1].items) > 0,
