@@ -56,7 +56,6 @@ class Game:
         self.player = None
 
         self.quit = False
-        self.game_initialized = False
         self.round = 0
 
         self._create_views()
@@ -77,7 +76,6 @@ class Game:
         self.map = RandomDungeon(self, "1", (200, 200))
         self.map.generate()
         self.player.pos = self.map.get_free_space()
-        self.game_initialized = True
 
         self.player.skills.set_base_level("char.hp_regen", 3)
         self.player.skills.set_base_level("char.mana_regen", 1)
@@ -237,12 +235,9 @@ class Game:
         self.current_view.round_update()
         try:
             while not self.quit:
-                if(self.game_initialized
-                   and (redraw or not self.player.round_cooldown)):
+                if redraw or not self.player.round_cooldown:
                     self.current_view.draw()
-                elif not self.game_initialized:
-                    self.current_view.draw()
-                if not self.game_initialized or not self.player.round_cooldown:
+                if not self.player.round_cooldown:
                     curses.doupdate()
                     mod = False
                     code = self.stdscr.getkey()
@@ -251,7 +246,7 @@ class Game:
                         while code == "\x1b":
                             code = self.stdscr.getkey()
                     redraw = self.handle_keypress(code, mod)
-                elif self.game_initialized:
+                else:
                     redraw = self.perform_microround()
                     if self.round % 10 == 0:
                         self.perform_round()

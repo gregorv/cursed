@@ -153,10 +153,11 @@ class Entity(object):
         pass
 
     def regenerate(self):
-        self.hp = min(self.effective_skills["char.hp"],
-                      self.hp + self.effective_skills["char.hp_regen"])
-        self.mana = min(self.effective_skills["char.mana"],
-                        self.hp + self.effective_skills["char.mana_regen"])
+        if self.hp > 0:
+            self.hp = min(self.effective_skills["char.hp"],
+                          self.hp + self.effective_skills["char.hp_regen"])
+            self.mana = min(self.effective_skills["char.mana"],
+                            self.hp + self.effective_skills["char.mana_regen"])
 
     def set_round_cooldown(self, time_required):
         self.round_cooldown = int(time_required)

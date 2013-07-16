@@ -24,6 +24,7 @@ import math
 import fightsystem
 import json
 
+
 class Player(Entity):
     def __init__(self, game):
         Entity.__init__(self, game)
