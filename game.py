@@ -81,7 +81,7 @@ class Game:
 
         self.player.skills.set_base_level("char.hp_regen", 3)
         self.player.skills.set_base_level("char.mana_regen", 1)
-        
+
         self.current_view.on_activate()
 
     def recover_savegame(self):
@@ -100,7 +100,7 @@ class Game:
                      if k not in blacklist)
         state["current_view"] = self.current_view.__class__.__name__
         return state
-    
+
     def __setstate__(self, state):
         self.stdscr = Game.stdscr
         assert self.stdscr is not None
@@ -238,7 +238,7 @@ class Game:
         try:
             while not self.quit:
                 if(self.game_initialized
-                and (redraw or not self.player.round_cooldown)):
+                   and (redraw or not self.player.round_cooldown)):
                     self.current_view.draw()
                 elif not self.game_initialized:
                     self.current_view.draw()
