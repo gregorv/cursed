@@ -175,6 +175,12 @@ class Game:
                                                                   30+fg_color,
                                                                   40+bg_color)
 
+    def save_bonefile(self):
+        pass
+
+    def save_deathlog(self):
+        pass
+
     def set_view(self, new_active="", *args, **kwargs):
         self.current_view.on_deactivate()
         if new_active:
@@ -197,7 +203,7 @@ class Game:
             npc.pre_round()
         redraw = False
         self.round += 1
-        self.player.round_cooldown -= 1
+        self.player.round_cooldown = max(self.player.round_cooldown-1, 0)
         for npc in self.map.npc_list:
             if npc.round_cooldown == 0:
                 npc.animate()
@@ -207,6 +213,8 @@ class Game:
         # UPDATE PARTICLES
         # DEATH CONDITION
         if self.player.hp <= 0:
+            self.save_bonefile()
+            self.save_deathlog()
             return
         self.map.npc_list = list(filter(
             lambda npc: npc.hp > 0,
@@ -225,24 +233,29 @@ class Game:
 
     def run(self):
         redraw = True
-        while not self.quit:
-            if(self.game_initialized
-               and (redraw or not self.player.round_cooldown)):
-                self.current_view.draw()
-            elif not self.game_initialized:
-                self.current_view.draw()
-            if not self.game_initialized or not self.player.round_cooldown:
-                curses.doupdate()
-                mod = False
-                code = self.stdscr.getkey()
-                if code == "\x1b":
-                    mod = True
-                    while code == "\x1b":
-                        code = self.stdscr.getkey()
-                redraw = self.handle_keypress(code, mod)
-            elif self.game_initialized:
-                redraw = self.perform_microround()
-                if self.round % 10 == 0:
-                    self.perform_round()
+        self.current_view.update()
+        self.current_view.round_update()
+        try:
+            while not self.quit:
+                if(self.game_initialized
+                and (redraw or not self.player.round_cooldown)):
+                    self.current_view.draw()
+                elif not self.game_initialized:
+                    self.current_view.draw()
+                if not self.game_initialized or not self.player.round_cooldown:
+                    curses.doupdate()
+                    mod = False
+                    code = self.stdscr.getkey()
+                    if code == "\x1b":
+                        mod = True
+                        while code == "\x1b":
+                            code = self.stdscr.getkey()
+                    redraw = self.handle_keypress(code, mod)
+                elif self.game_initialized:
+                    redraw = self.perform_microround()
+                    if self.round % 10 == 0:
+                        self.perform_round()
+        except KeyboardInterrupt:
+            pass
         if self.player.hp > 0:
             self.save_game()
