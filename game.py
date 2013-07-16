@@ -203,11 +203,10 @@ class Game:
         self.round += 1
         self.player.round_cooldown = max(self.player.round_cooldown-1, 0)
         for npc in self.map.npc_list:
-            if npc.round_cooldown == 0:
+            npc.round_cooldown -= 1
+            if npc.round_cooldown <= 0:
                 npc.animate()
                 redraw = True
-            else:
-                npc.round_cooldown -= 1
         # UPDATE PARTICLES
         # DEATH CONDITION
         if self.player.hp <= 0:
