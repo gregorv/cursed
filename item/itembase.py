@@ -56,6 +56,9 @@ class Item():
         self.container = None
         self.hotkey = None
 
+    def get_init_args(self):
+        return None
+
     def on_ingest(self, ingester):
         pass
 

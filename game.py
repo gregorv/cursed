@@ -21,13 +21,16 @@ from __future__ import division
 
 import curses
 import ConfigParser
+import datetime
+import pickle
+import json
+import os
 
 from view import ViewRegistry
 from map import Map, RandomDungeon
 from player import Player
 from keymapping import Keymapping
 from item import ItemRegistry
-import pickle
 
 
 class Game:
@@ -174,10 +177,30 @@ class Game:
                                                                   40+bg_color)
 
     def save_bonefile(self):
-        pass
+        now = datetime.datetime.now()
+        filename = self.player_name + "_" + \
+            now.strftime("%Y-%d-%m_%H-%M-%S") + ".bone"
+        with open(os.path.join(self.bone_directory, filename), "w") as fp:
+            bs = self.player.skills
+            bone = {
+                "name": self.player_name,
+                "inventory": [(it.name, it.get_init_args())
+                              for it in self.player.inventory.items],
+                "level": self.player.level,
+                "skills": dict((skill, bs[skill])
+                               for skill in bs.get_skills()),
+                "wielded": (None if self.player.wielded is None
+                            else (self.player.wielded.name,
+                                  self.player.wielded.get_init_args())),
+            }
+            json.dump(bone, fp)
 
     def save_deathlog(self):
-        pass
+        now = datetime.datetime.now()
+        filename = self.player_name + "_" + \
+            now.strftime("%Y-%m-%d_%H-%M-%S") + ".dlog"
+        with open(os.path.join(self.death_directory, filename), "w") as fp:
+            pass
 
     def set_view(self, new_active="", *args, **kwargs):
         self.current_view.on_deactivate()

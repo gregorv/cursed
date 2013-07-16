@@ -25,6 +25,7 @@ import os
 from mainmenu import StartMenu
 from game import Game
 
+
 class GameLoader(pickle.Unpickler):
     pass
 
@@ -51,6 +52,8 @@ def init(stdscr, args):
             else:
                 game.player_name = "Horst"
             game.savefile = args["s"]
+            game.bone_directory = args["b"]
+            game.death_directory = args["d"]
             game.initialize()
             game.run()
             break
@@ -76,6 +79,10 @@ if __name__ == "__main__":
                        help="Path were Python tracebacks will be stored instead of displaying them on stdout.")
     parse.add_argument("-s", default="savegame",
                        help="Path where to put the savegame")
+    parse.add_argument("-b", default="bones/",
+                       help="Bonefile directory")
+    parse.add_argument("-d", default="deathlog/",
+                       help="Deathlog directory")
     args = vars(parse.parse_args())
     try:
         curses.wrapper(init, args)

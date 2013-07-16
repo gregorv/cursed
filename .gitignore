@@ -3,3 +3,5 @@ __pycache__/*
 *ttyrecord
 *.pyc
 savegame
+bones/*.bone
+deathlog/*.dlog
