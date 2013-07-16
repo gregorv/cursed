@@ -61,51 +61,6 @@ class BaseView:
         self.scr.noutrefresh()
 
 
-class StartMenu(BaseView):
-    def __init__(self, game, scr):
-        BaseView.__init__(self, game, scr)
-        self.state = "main"
-
-    def on_activate(self):
-        self.state = "main"
-
-    def handle_keypress(self, code, mod):
-        if not mod and code == "q":
-            self.game.quit = True
-        elif not mod and code == "p":
-            self.game.set_view()
-            self.game.initialize_game()
-        else:
-            return False
-        return True
-
-    def draw(self):
-        self.scr.clear()
-        self.scr.addstr(0, 0,
-"""      ____
-     / ___|   _ _ __ ___  ___  __| |
-    | |  | | | | '__/ __|/ _ \/ _` |
-    | |__| |_| | |  \__ \  __/ (_| |
-     \____\__,_|_|  |___/\___|\__,_|""",
-                        curses.A_BOLD)
-        self.scr.addstr(5, 0, "    A Python based rouge-like")
-        if self.state == "main":
-            self.scr.addstr(8, 1,
-                            "c) Continue last game",
-                            curses.color_pair(curses.COLOR_RED))
-            self.scr.addstr(9, 1,
-                            "p) Start new game")
-            self.scr.addstr(10, 1,
-                            "h) Read Documentation")
-            self.scr.addstr(11, 1,
-                            "q) Quit")
-        elif self.state == "overwrite_warning":
-            self.scr.addstr(6, 1, "Warning!", curses.A_BOLD)
-            self.scr.addstr(6, 10, "This will delete your previous savegame.")
-            self.scr.addstr(7, 1, "Continue? (y/n)")
-        self.scr.noutrefresh()
-
-
 class SkillView(BaseView):
     def __init__(self, game, scr):
         BaseView.__init__(self, game, scr)

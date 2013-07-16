@@ -66,10 +66,8 @@ class Game:
             self.views[name] = tmp
             if name == "Play":
                 self.play_view = tmp
-            elif name == "StartMenu":
                 self.current_view = tmp
 
-    def initialize_game(self):
         self.player = Player(self)
         sword = ItemRegistry.create(self, "WoodenSword")
         self.player.inventory.add(sword)

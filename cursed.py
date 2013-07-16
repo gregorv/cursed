@@ -20,18 +20,36 @@
 import curses
 import argparse
 import traceback
+from mainmenu import StartMenu
 from game import Game
 
 
-def start_game(stdscr, args):
+def init(stdscr, args):
     curses.cbreak()
     curses.curs_set(0)
-    game = Game(stdscr, extra_config=args["c"])
-    if "u" in args:
-        game.player_name = args["u"]
-    else:
-        game.player_name = "Horst"
-    game.run()
+    menu = StartMenu(stdscr)
+    while True:
+        menu.draw()
+        ch = stdscr.getkey()
+        menu.handle_keypress(ch, False)
+        if menu.new_game:
+            game = Game(stdscr, extra_config=args["c"])
+            if "u" in args:
+                game.player_name = args["u"]
+            else:
+                game.player_name = "Horst"
+            game.run()
+            break
+        elif menu.continue_game:
+            game = Game(stdscr, extra_config=args["c"])
+            if "u" in args:
+                game.player_name = args["u"]
+            else:
+                game.player_name = "Horst"
+            game.run()
+            break
+        if menu.quit:
+            break
 
 if __name__ == "__main__":
     parse = argparse.ArgumentParser()
@@ -41,9 +59,11 @@ if __name__ == "__main__":
                        help="User configuration")
     parse.add_argument("-t", default=None,
                        help="Path were Python tracebacks will be stored instead of displaying them on stdout.")
+    parse.add_argument("-s", default="savegame",
+                       help="Path where to put the savegame")
     args = vars(parse.parse_args())
     try:
-        curses.wrapper(start_game, args)
+        curses.wrapper(init, args)
     except Exception, e:
         if "t" in args and args["t"]:
             with open(args["t"], "w") as f:
