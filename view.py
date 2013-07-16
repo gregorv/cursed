@@ -54,6 +54,12 @@ class BaseView:
             return True
         return False
 
+    def update(self):
+        pass
+
+    def round_update(self):
+        pass
+
     def draw(self):
         self.scr.clear()
         self.scr.border()
@@ -451,6 +457,12 @@ class Play(BaseView):
         else:
             return False
         return True
+
+    def update(self):
+        self.game.map.update()
+
+    def round_update(self):
+        self.game.map.round_update()
 
     def draw(self):
         self.scr.clear()

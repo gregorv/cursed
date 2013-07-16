@@ -45,6 +45,9 @@ class Map:
         self.item_piles = dict(filter(lambda x: len(x[1].items) > 0,
                                       self.item_piles.items()))
 
+    def round_update(self):
+        pass
+
     def _update_discovery(self):
         self._visible_area = self.get_visible_area(self.game.player.pos, 8)
         for x, y in self._visible_area:
@@ -310,11 +313,21 @@ class RandomDungeon(Map):
     def __init__(self, game, name, size):
         Map.__init__(self, game, name, (150, 150))
 
-    def populate(self, n=10):
+    def populate(self, n=10, only_out_of_view=False):
         for i in range(n):
             npc = NPCRegistry.create(self.game, "Ant")
-            npc.pos = self.get_free_space()
+            if only_out_of_view:
+                in_view = True
+                while in_view:
+                    npc.pos = self.get_free_space()
+                    in_view = npc.pos in self._visible_area
+            else:
+                npc.pos = self.get_free_space()
             self.npc_list.append(npc)
+
+    def round_update(self):
+        if len(self.npc_list) < 40:
+            self.populate(n=1, only_out_of_view=True)
 
     def generate(self):
         self.data = [["#"]*(self.size[0]) for i in range(self.size[1])]
@@ -376,4 +389,4 @@ class RandomDungeon(Map):
                            random.randint(p[1]-30, p[1]+30)))
                          for i in range(random.randint(2, 6))]
             start_points.extend(new_rooms)
-        self.populate(50)
+        self.populate(40)

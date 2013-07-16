@@ -191,6 +191,7 @@ class Game:
         return True
 
     def perform_microround(self):
+        self.current_view.update()
         self.player.pre_round()
         for npc in self.map.npc_list:
             npc.pre_round()
@@ -217,6 +218,7 @@ class Game:
         return redraw
 
     def perform_round(self):
+        self.current_view.round_update()
         self.player.regenerate()
         for npc in self.map.npc_list:
             npc.regenerate()
@@ -226,7 +228,6 @@ class Game:
         while not self.quit:
             if(self.game_initialized
                and (redraw or not self.player.round_cooldown)):
-                self.map.update()
                 self.current_view.draw()
             elif not self.game_initialized:
                 self.current_view.draw()
