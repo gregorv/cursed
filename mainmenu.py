@@ -27,12 +27,28 @@ class StartMenu:
         self.new_game = False
         self.continue_game = False
         self.quit = False
+        self.no_savegame = False
 
     def handle_keypress(self, code, mod):
-        if not mod and code == "q":
-            self.quit = True
-        elif not mod and code == "p":
-            self.new_game = True
+        if self.state == "main":
+            if not mod and code == "q":
+                self.quit = True
+            elif not mod and code == "p":
+                if self.no_savegame:
+                    self.new_game = True
+                else:
+                    self.state = "overwrite_warning"
+            elif not mod and code == "c" and not self.no_savegame:
+                self.continue_game = True
+            else:
+                return False
+        elif self.state == "overwrite_warning":
+            if not mod and code == "y":
+                self.new_game = True
+            elif not mod and code == "n":
+                self.state = "main"
+            else:
+                return False
         else:
             return False
         return True
@@ -48,9 +64,9 @@ class StartMenu:
                         curses.A_BOLD)
         self.scr.addstr(5, 0, "    A Python based rouge-like")
         if self.state == "main":
-            self.scr.addstr(8, 1,
-                            "c) Continue last game",
-                            curses.color_pair(curses.COLOR_RED))
+            if not self.no_savegame:
+                self.scr.addstr(8, 1,
+                                "c) Continue last game")
             self.scr.addstr(9, 1,
                             "p) Start new game")
             self.scr.addstr(10, 1,

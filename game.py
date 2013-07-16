@@ -27,7 +27,7 @@ from map import Map, RandomDungeon
 from player import Player
 from keymapping import Keymapping
 from item import ItemRegistry
-import json
+import pickle
 
 
 class Game:
@@ -51,7 +51,6 @@ class Game:
 
         self._setup_styles()
         self.stdscr = stdscr
-        self.stdscr.resize(25, 80)
 
         self.map = None
         self.player = None
@@ -60,8 +59,10 @@ class Game:
         self.game_initialized = False
         self.round = 0
 
-        self.views = {}
+        self._create_views()
 
+    def _create_views(self):
+        self.views = {}
         for name, View in ViewRegistry.classes.items():
             tmp = View(self, self.stdscr)
             self.views[name] = tmp
@@ -88,31 +89,24 @@ class Game:
             data = json.load(fp)
 
     def save_game(self):
-        class GameSaver(json.JSONEncoder):
-            def default(self, o):
-                if hasattr(o, "__getstate__"):
-                    return o.__getstate__()
-                else:
-                    return json.JSONEncoder.default(self, o)
         with open(self.savefile, "w") as fp:
-            for chunk in GameSaver().iterencode(self):
-                fp.write(chunk)
+            pickle.dump(self, fp, 2)
 
     def __getstate__(self):
-        blacklist = ["config", "keymap", "stdscr", "views", "use_color",
-                     "quick_map_draw", "style", "ansi_style", "play_view"]
+        blacklist = ["use_color", "views", "current_view",
+                     "quick_map_draw", "style", "ansi_style", "play_view",
+                     "stdscr"]
         state = dict((k, v) for k, v in self.__dict__.items()
                      if k not in blacklist)
         state["current_view"] = self.current_view.__class__.__name__
         return state
-
+    
     def __setstate__(self, state):
-        self.__dict__(state)
-        self.player = Player(self)
-        self.player.__setstate__(state["player"])
-        self.map = RandomDungeon(self, "", (1, 1))
-        self.map.__getstate__(state["map"])
-        self.current_view = self.view[self.current_view]
+        self.stdscr = Game.stdscr
+        assert self.stdscr is not None
+        self._create_views()
+        self.__dict__.update(state)
+        self.current_view = self.views[self.current_view]
 
     def _setup_styles(self):
         # get color and attribute numbers from curses

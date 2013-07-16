@@ -127,12 +127,6 @@ class SkillSet:
         condition = SkillSet.skill_def[skill][5]
         return condition(self) if condition else True
 
-    def __getstate__(self):
-        return self.__dict__
-    
-    def __setstate__(self):
-        self.__dict__.update(self)
-
 class Entity(object):
     """
     Things knowing the concept of life and the space-time.
@@ -148,16 +142,6 @@ class Entity(object):
         self.symbol = ""
         self.style = 0
         self.level = 1
-
-    def __getstate__(self):
-        blacklist = ["game"]
-        return dict((k, v) for k, v in self.__dict__.items() if k not in blacklist)
-
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-        skills = self.effective_skills
-        self.effective_skills = SkillSet()
-        self.effective_skills.__setstate__(skills)
 
     def pre_round(self):
         pass

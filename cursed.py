@@ -20,30 +20,47 @@
 import curses
 import argparse
 import traceback
+import pickle
+import os
 from mainmenu import StartMenu
 from game import Game
 
+class GameLoader(pickle.Unpickler):
+    pass
+
 
 def init(stdscr, args):
+    Game.stdscr = stdscr
     curses.cbreak()
     curses.curs_set(0)
+    stdscr.resize(25, 80)
     menu = StartMenu(stdscr)
-    game = Game(stdscr, extra_config=args["c"])
-    if "u" in args:
-        game.player_name = args["u"]
-    else:
-        game.player_name = "Horst"
-    game.savefile = args["s"]
+    menu.no_savegame = not os.path.exists(args["s"])
     while True:
         menu.draw()
         ch = stdscr.getkey()
         menu.handle_keypress(ch, False)
         if menu.new_game:
+            try:
+                os.remove(args["s"])
+            except OSError:
+                pass
+            game = Game(stdscr, extra_config=args["c"])
+            if "u" in args:
+                game.player_name = args["u"]
+            else:
+                game.player_name = "Horst"
+            game.savefile = args["s"]
             game.initialize()
             game.run()
             break
         elif menu.continue_game:
-            game.recover_savegame()
+            with open(args["s"]) as fp:
+                game = pickle.load(fp)
+            os.remove(args["s"])
+            game.stdscr = stdscr
+            game._setup_styles()
+            game.quit = False
             game.run()
             break
         if menu.quit:

@@ -36,11 +36,6 @@ class Player(Entity):
         self.exp = 0
         self.level_skills = ["char.hp"]
 
-    def __setstate__(self, state):
-        sk = self.skills
-        self.skills = SkillSet()
-        self.skills.__setstate__(sk)
-
     def pre_round(self):
         Entity.pre_round(self)
         self.effective_skills.replace_levels(self.skills)
