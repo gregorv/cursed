@@ -69,6 +69,10 @@ class Container:
             else:
                 self.items.append(i)
 
+    def remove(self, it):
+        it.container = None
+        self.items.remove(it)
+
     def __len__(self):
         return len(self.items)
 
