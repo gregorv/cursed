@@ -482,8 +482,8 @@ class Play(BaseView):
         display_bar(yx[0]-4, 1, 9, p.mana, p.effective_skills["char.mana"],
                     curses.color_pair(curses.COLOR_YELLOW),
                     curses.color_pair(curses.COLOR_WHITE))
-        self.scr.addstr(yx[0]-5, 9,
-                        "{0:->9}  Str{1:3d}  Def{2:3d}"
+        self.scr.addstr(yx[0]-5, 11,
+                        "{0:<9} Str {1:<2d}  Def {2:<2d}"
                         .format("{0}/{1}"
                                 .format(p.hp,
                                         p.effective_skills["char.hp"]
@@ -491,8 +491,8 @@ class Play(BaseView):
                                 p.effective_skills["char.strength"],
                                 p.effective_skills["char.defence"],
                                 ))
-        self.scr.addstr(yx[0]-4, 9,
-                        "{0:->9}  Mag{1:3d}  Spr{2:3d}"
+        self.scr.addstr(yx[0]-4, 11,
+                        "{0:<9} Mag {1:<2d}  Spr {2:<2d}"
                         .format("{0}/{1}"
                                 .format(p.mana,
                                         p.effective_skills["char.mana"]
@@ -500,9 +500,13 @@ class Play(BaseView):
                                 p.effective_skills["char.magic"],
                                 p.effective_skills["char.spirit"],
                                 ))
-        self.scr.addstr(yx[0]-3, 1, "Level {0:3d}  Exp {1}/{2}"
-                        .format(p.level,
+        self.scr.addstr(yx[0]-3, 1, "Rnd {0:<7,.1f} Lvl {1:<3d} Exp {2}/{3}"
+                        .format(self.game.round/10,
+                                p.level,
                                 p.exp_this_level(),
                                 p.exp_next_level()))
-        self.scr.addstr(yx[0]-2, 1, "Round {0:.1f}".format(self.game.round/10))
+        self.scr.addstr(yx[0]-2, 1, "Weapon: {0}"
+                        .format(self.game.player.wielded))
+        self.scr.addstr(yx[0]-1, 1, "Armour: {0}"
+                        .format(None))
         self.scr.noutrefresh()
