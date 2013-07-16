@@ -62,6 +62,9 @@ class Item():
     def on_read(self, reader):
         pass
 
+    def __str__(self):
+        return self.name
+
 
 class ItemStackable:
     def __init__(self):
