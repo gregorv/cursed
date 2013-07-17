@@ -99,7 +99,8 @@ class Game:
                      "stdscr"]
         state = dict((k, v) for k, v in self.__dict__.items()
                      if k not in blacklist)
-        state["current_view"] = self.current_view.__class__.__name__
+        state["current_view"] = (self.current_view.__class__.__name__,
+                                 self.current_view.activation_args)
         return state
 
     def __setstate__(self, state):
@@ -107,7 +108,9 @@ class Game:
         assert self.stdscr is not None
         self._create_views()
         self.__dict__.update(state)
-        self.current_view = self.views[self.current_view]
+        view_name, args = self.current_view
+        self.current_view = self.views[view_name]
+        self.current_view.on_activate(*args)
 
     def _setup_styles(self):
         # get color and attribute numbers from curses

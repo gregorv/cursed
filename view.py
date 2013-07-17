@@ -41,9 +41,10 @@ class BaseView:
         self.game = game
         self.name = self.__class__.__name__
         self.max_y, self.max_x = self.scr.getmaxyx()
+        self.activation_args = ()
 
-    def on_activate(self):
-        pass
+    def on_activate(self, *args):
+        self.activation_args = args
 
     def on_deactivate(self):
         pass
@@ -275,6 +276,7 @@ class ItemView(BaseView):
         self.item_view_height = self.max_y-5
 
     def on_activate(self, container):
+        self.activation_args = (container)
         self.item_container = container
         self.selection = []
 
@@ -326,6 +328,7 @@ class ItemView(BaseView):
 class Inventory(ItemView):
     def on_activate(self):
         ItemView.on_activate(self, self.game.player.inventory)
+        self.activation_args = ()
 
     def draw(self):
         self.scr.clear()
