@@ -146,6 +146,9 @@ class SkillView(BaseView):
         base_skills = self.game.player.skills
         effective_skills = self.game.player.effective_skills
         sel_y = 0
+        self.scr.addstr(y_off-1, x_off+16,
+                        "Base Eff Dist  Exp Ap",
+                        curses.A_BOLD)
         for prefix, name in categories:
             if draw_y >= y_off:
                 self.scr.addstr(draw_y, x_off,
@@ -185,6 +188,10 @@ class SkillView(BaseView):
                                 .format(base_skills
                                         .get_exp_to_next_level(skill)),
                                 color)
+                self.scr.addstr(draw_y, x_off+34,
+                                "{0:>2d}"
+                                .format(base_skills
+                                        .get_aptitude(skill)))
                 sel_y += 1
                 draw_y += 1
                 if draw_y >= self.max_skill_view_height + y_off:
