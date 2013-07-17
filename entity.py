@@ -84,10 +84,12 @@ class SkillSet:
                                 for s in SkillSet.skill_def.keys())
         self.exp_list = dict((s, 0)
                              for s in SkillSet.skill_def.keys())
+        self.aptitude = dict((s, 0)
+                             for s in SkillSet.skill_def.keys())
 
     def __getitem__(self, skill):
         return (self.base_level[skill]
-                + self.exp_list[skill] // SkillSet.skill_def[skill][1])
+                + self.exp_list[skill] // self.get_exp_per_level(skill))
 
     def get_skills(self):
         return list(sorted(self.base_level.keys(),
@@ -103,11 +105,15 @@ class SkillSet:
         return self.exp_list[skill]
 
     def get_exp_per_level(self, skill):
-        return SkillSet.skill_def[skill][1]
+        return int(SkillSet.skill_def[skill][1]
+                   * (10 - self.aptitude[skill]) / 10)
 
     def get_exp_to_next_level(self, skill):
-        return SkillSet.skill_def[skill][1] - \
-            self.exp_list[skill] % SkillSet.skill_def[skill][1]
+        return self.get_exp_per_level(skill) - \
+            self.exp_list[skill] % self.get_exp_per_level(skill)
+
+    def get_aptitude(self, skill):
+        return self.aptitude[skill]
 
     def add_exp(self, skill, exp):
         self.exp_list[skill] += exp
@@ -126,6 +132,7 @@ class SkillSet:
     def can_level_skill(self, skill):
         condition = SkillSet.skill_def[skill][5]
         return condition(self) if condition else True
+
 
 class Entity(object):
     """
