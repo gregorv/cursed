@@ -22,6 +22,7 @@ import argparse
 import traceback
 import pickle
 import os
+import player
 from mainmenu import StartMenu
 from game import Game
 
@@ -54,7 +55,7 @@ def init(stdscr, args):
             game.savefile = args["s"]
             game.bone_directory = args["b"]
             game.death_directory = args["d"]
-            game.initialize()
+            game.initialize(menu.player_race, menu.player_class)
             game.run()
             break
         elif menu.continue_game:

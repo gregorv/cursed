@@ -18,6 +18,8 @@
 """
 
 import curses
+import random
+import playerdefs
 
 
 class StartMenu:
@@ -29,6 +31,8 @@ class StartMenu:
         self.quit = False
         self.no_savegame = False
         self.max_y, self.max_x = scr.getmaxyx()
+        self.player_class = ""
+        self.player_race = ""
 
     def handle_keypress(self, code, mod):
         if self.state == "main":
@@ -36,7 +40,7 @@ class StartMenu:
                 self.quit = True
             elif not mod and code == "p":
                 if self.no_savegame:
-                    self.new_game = True
+                    self.state = "class_select"
                 else:
                     self.state = "overwrite_warning"
             elif not mod and code == "c" and not self.no_savegame:
@@ -45,9 +49,35 @@ class StartMenu:
                 return False
         elif self.state == "overwrite_warning":
             if not mod and code == "y":
-                self.new_game = True
+                self.state = "class_select"
             elif not mod and code == "n":
                 self.state = "main"
+            else:
+                return False
+        elif self.state == "class_select":
+            for y, cls in enumerate(
+                sorted(playerdefs.class_descr.keys(),
+                       key=lambda x: playerdefs.class_descr[x][0])):
+                if not mod and code == chr(ord("a")+y):
+                    self.state = "race_select"
+                    self.player_class = cls
+                    return True
+            if not mod and code == "-":
+                self.player_class = random.choice(playerdefs.class_descr.keys())
+                return True
+            else:
+                return False
+        elif self.state == "race_select":
+            for y, race in enumerate(
+                sorted(playerdefs.race_descr.keys(),
+                       key=lambda x: playerdefs.race_descr[x][0])):
+                if not mod and code == chr(ord("a")+y):
+                    self.new_game = True
+                    self.player_race = race
+                    return True
+            if not mod and code == "-":
+                self.player_race = random.choice(playerdefs.race_descr.keys())
+                return True
             else:
                 return False
         else:
@@ -80,6 +110,30 @@ class StartMenu:
             self.scr.addstr(10, 2, "Warning!", curses.A_BOLD)
             self.scr.addstr(10, 11, "This will delete your previous savegame.")
             self.scr.addstr(11, 2, "Continue? (y/n)")
+        elif self.state == "class_select":
+            self.scr.addstr(10, 2, "Choose your class", curses.A_BOLD)
+            self.scr.addstr(11, 2, "-) auto select")
+            for y, cls in enumerate(
+                sorted(playerdefs.class_descr.keys(),
+                       key=lambda x: playerdefs.class_descr[x][0])):
+                cls_descr = playerdefs.class_descr[cls]
+                self.scr.addstr(12+y, 2, "{0}) {1} - {2}".format(
+                    chr(ord("a")+y),
+                    cls_descr[0],
+                    cls_descr[1],
+                ))
+        elif self.state == "race_select":
+            self.scr.addstr(10, 2, "Choose your race", curses.A_BOLD)
+            self.scr.addstr(11, 2, "-) auto select")
+            for y, cls in enumerate(
+                sorted(playerdefs.race_descr.keys(),
+                       key=lambda x: playerdefs.race_descr[x][0])):
+                cls_descr = playerdefs.race_descr[cls]
+                self.scr.addstr(12+y, 2, "{0}) {1} - {2}".format(
+                    chr(ord("a")+y),
+                    cls_descr[0],
+                    cls_descr[1],
+                ))
         self.scr.refresh()
 
 

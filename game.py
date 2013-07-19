@@ -28,7 +28,7 @@ import os
 
 from view import ViewRegistry
 from map import Map, RandomDungeon
-from player import Player
+from player import create_player
 from keymapping import Keymapping
 from item import ItemRegistry
 
@@ -72,16 +72,13 @@ class Game:
                 self.play_view = tmp
                 self.current_view = tmp
 
-    def initialize(self):
-        self.player = Player(self)
+    def initialize(self, player_race, player_class):
+        self.player = create_player(self, player_race, player_class)
         sword = ItemRegistry.create(self, "WoodenSword")
         self.player.inventory.add(sword)
         self.map = RandomDungeon(self, "1", (200, 200))
         self.map.generate()
         self.player.pos = self.map.get_free_space()
-
-        self.player.skills.set_base_level("char.hp_regen", 3)
-        self.player.skills.set_base_level("char.mana_regen", 1)
 
         self.current_view.on_activate()
 

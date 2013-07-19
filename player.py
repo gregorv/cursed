@@ -23,6 +23,7 @@ from item import Inventory
 import math
 import fightsystem
 import json
+import playerdefs
 
 
 class Player(Entity):
@@ -101,3 +102,14 @@ class Player(Entity):
                 self.attack(detect)
         return True
 
+
+def create_player(game, race, cls):
+    player = Player(game)
+    if race:
+        player.skills.add_base_definition(playerdefs.race_def[race])
+    if cls:
+        player.skills.add_base_definition(playerdefs.class_def[cls])
+    player.hp = player.skills["char.hp"]
+    player.mana = player.skills["char.mana"]
+    player.effective_skills.replace_levels(player.skills)
+    return player

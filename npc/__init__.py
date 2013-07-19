@@ -48,6 +48,10 @@ class NPC(Entity):
         self.name = self.__class__.name
         self.attack_power = self.__class__.attack_power
         self.view_range = self.__class__.view_range
+        self.effective_skills["char.hp"] = 20
+        self.effective_skills["char.defence"] = 1
+        self.effective_skills["char.strength"] = 1
+        self.hp = 20
 
     def attack_enemy(self, target):
         target.hp = int(max(0, target.hp - self.attack_power))
@@ -121,7 +125,7 @@ class NPC(Entity):
 
     def __getstate__(self):
         return self.__dict__
-    
+
     def __setstate__(self, state):
         self.__dict__.update(state)
 

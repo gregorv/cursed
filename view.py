@@ -490,7 +490,10 @@ class Play(BaseView):
         self.game.map.render(self.scr, (0, 0), (yx[0]-6, yx[1]-50))
 
         def display_bar(y, x, width, val, max, color_a, color_b):
-            full = int(width*val/max)
+            if max == 0:
+                full = 0
+            else:
+                full = int(width*val/max)
             if full > 0:
                 self.scr.addstr(y, x, "*"*full, color_a)
             if width-full > 0:
