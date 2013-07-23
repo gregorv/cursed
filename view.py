@@ -19,8 +19,11 @@ from __future__ import division
 """
 
 import curses
+from time import time
+
 import item
 from map import Map
+from drawtarget import DrawTarget
 
 
 class ViewRegistry(type):
@@ -329,6 +332,9 @@ class MapOverview(BaseView):
 class Play(BaseView):
     def __init__(self, game, scr):
         BaseView.__init__(self, game, scr)
+        self.direct_render_time = 0.0
+        self.indirect_render_time = 0.0
+        self.num_render_calls = 0
 
     def handle_keypress(self, code, mod):
         if self.game.player.handle_keypress(code, mod):
@@ -349,7 +355,19 @@ class Play(BaseView):
     def draw(self):
         self.scr.clear()
         yx = self.scr.getmaxyx()
-        self.game.map.render(self.scr, (0, 0), (yx[0]-6, yx[1]-50))
+        start = time()
+        self.game.map.render_to_target(self.scr, (yx[0]-6, yx[1]-50))
+        self.direct_render_time += time() - start
+
+        self.scr.clear()
+
+        start = time()
+        trg = DrawTarget((yx[0]-6, yx[1]-50))
+        self.game.map.render_to_target(trg, (yx[0]-6, yx[1]-50))
+        self.indirect_render_time += time() - start
+        trg.draw(self.scr, 0, 0)
+
+        self.num_render_calls += 1
 
         def display_bar(y, x, width, val, max, color_a, color_b):
             full = int(width*val/max)
@@ -386,5 +404,7 @@ class Play(BaseView):
                         .format(p.level,
                                 p.exp_this_level(),
                                 p.exp_next_level()))
-        self.scr.addstr(yx[0]-2, 1, "Round {0:.1f}".format(self.game.round/10))
+        self.scr.addstr(yx[0]-2, 1, "Round {0:.1f} {1:.0f}us {2:.0f}us".format(self.game.round/10,
+        self.direct_render_time/self.num_render_calls*1000000,
+        self.indirect_render_time/self.num_render_calls*1000000))
         self.scr.noutrefresh()

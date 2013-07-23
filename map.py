@@ -25,6 +25,7 @@ import curses
 
 from item import Pile, Container, ItemRegistry
 from npc import NPCRegistry
+from drawtarget import DrawTarget
 
 
 class Map:
@@ -202,11 +203,11 @@ class Map:
     def on_exit(self, target):
         pass
 
-    def render(self, scr, topleft_offset, scrdim, center=None):
+    def render_to_target(self, trg, scrdim, center=None):
         if center is None:
             center = self.game.player.pos
-        scrmid = (scrdim[0]//2 + topleft_offset[0],
-                  scrdim[1]//2 + topleft_offset[1])
+        scrmid = (scrdim[0]//2,
+                  scrdim[1]//2)
         # word coord -> screen coord
         coord = lambda pos: (pos[1]-center[1]+scrmid[0],
                              pos[0]-center[0]+scrmid[1])
@@ -216,26 +217,26 @@ class Map:
 
         player_pos = coord(self.game.player.pos)
 
-        in_scr = lambda pos: (pos[0] >= topleft_offset[0]
-                              and pos[1] >= topleft_offset[1]
+        in_scr = lambda pos: (pos[0] >= 0
+                              and pos[1] >= 0
                               and pos[0] < scrdim[0]
                               and pos[1] < scrdim[1])
 
         if self.game.quick_map_draw:
-            for y in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
-                pos = revcoord((y, topleft_offset[1]))
+            for y in range(0, 0+scrdim[0]):
+                pos = revcoord((y, 0))
                 real_y = max(0, min(self.size[1]-1, pos[1]))
                 start_x = max(0, pos[0])
                 end_x = min(pos[0]+scrdim[1], self.size[0])
                 if pos[1] < 0 or pos[1] >= self.size[1]:
                     continue
-                x = topleft_offset[1]+max(0, -pos[0]+start_x)
-                scr.addstr(y, x,
+                x = max(0, -pos[0]+start_x)
+                trg.addstr(y, x,
                            "".join(self.discovered[real_y][start_x:end_x]))
 
             for p in map(coord, self._visible_area):
                 if in_scr(p):
-                    scr.chgat(p[0], p[1], 1, curses.A_BOLD)
+                    trg.chgat(p[0], p[1], 1, curses.A_BOLD)
         else:
             sty_wall = self.game.style["map.wall"]
             sty_wall_vis = self.game.style["map.wall_visible"]
@@ -245,37 +246,37 @@ class Map:
             sty_water_vis = self.game.style["map.water_visible"]
             sty_misc = self.game.style["map.misc"]
             sty_misc_vis = self.game.style["map.misc_visible"]
-            for ys in range(topleft_offset[0], topleft_offset[0]+scrdim[0]):
-                pos = revcoord((ys, topleft_offset[1]))
+            for ys in range(0, scrdim[0]):
+                pos = revcoord((ys, 0))
                 if pos[1] < 0 or pos[1] >= self.size[1]:
                     continue
-                for xs in range(topleft_offset[1], topleft_offset[1]+scrdim[1]):
+                for xs in range(0, scrdim[1]):
                     x, y = revcoord((ys, xs))
                     if x < 0 or x >= self.size[0]:
                         continue
                     if self.discovered[y][x] == ".":
-                        scr.addch(ys, xs,
+                        trg.addch(ys, xs,
                                   ".",
                                   sty_floor_vis
                                   if (x, y) in self._visible_area
                                   else sty_floor
                                   )
                     elif self.discovered[y][x] == "#":
-                        scr.addch(ys, xs,
+                        trg.addch(ys, xs,
                                   "#",
                                   sty_wall_vis
                                   if (x, y) in self._visible_area
                                   else sty_wall
                                   )
                     elif self.discovered[y][x] == "~":
-                        scr.addch(ys, xs,
+                        trg.addch(ys, xs,
                                   "~",
                                   sty_water_vis
                                   if (x, y) in self._visible_area
                                   else sty_water
                                   )
                     else:
-                        scr.addch(ys, xs,
+                        trg.addch(ys, xs,
                                   self.discovered[y][x],
                                   sty_misc_vis
                                   if (x, y) in self._visible_area
@@ -288,23 +289,22 @@ class Map:
                 if(pos not in self._visible_area
                    and self.discovered[pos[1]][pos[0]] == " "):
                     continue
-                scr.addch(scrcoord[0], scrcoord[1],
+                trg.addch(scrcoord[0], scrcoord[1],
                           pile.render(),
                           curses.A_DIM)
         # draw NPCs (only if in view)
         for npc in self.npc_list:
             scrcoord = coord(npc.pos)
             if in_scr(scrcoord) and npc.pos in self._visible_area:
-                scr.addch(scrcoord[0], scrcoord[1],
+                trg.addch(scrcoord[0], scrcoord[1],
                           npc.symbol, npc.style)
         if in_scr(player_pos):
-            scr.addch(player_pos[0], player_pos[1],
+            trg.addch(player_pos[0], player_pos[1],
                       "@", self.game.style["player"])
         #fileds = self.get_field_circle(self.game.player.pos, 8)
         #for p in map(coord, fileds):
            #if in_scr(p):
                 #scr.addch(p[0], p[1], "*", curses.color_pair(1))
-
 
 class RandomDungeon(Map):
     def __init__(self, game, name, size):
