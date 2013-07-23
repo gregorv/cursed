@@ -30,7 +30,7 @@ from view import ViewRegistry
 from map import Map, RandomDungeon
 from player import create_player
 from keymapping import Keymapping
-from item import ItemRegistry
+from item import ItemRegistry, ItemStackable
 
 
 class Game:
@@ -178,8 +178,9 @@ class Game:
 
     def save_bonefile(self):
         now = datetime.datetime.now()
-        filename = self.player_name + "_" + \
-            now.strftime("%Y-%d-%m_%H-%M-%S") + ".bone"
+        filename = "{date}_{name}.bone"\
+                   .format(name=self.player_name,
+                           date=now.strftime("%Y-%m-%d_%H-%M-%S"))
         with open(os.path.join(self.bone_directory, filename), "w") as fp:
             bs = self.player.skills
             bone = {
@@ -197,10 +198,21 @@ class Game:
 
     def save_deathlog(self):
         now = datetime.datetime.now()
-        filename = self.player_name + "_" + \
-            now.strftime("%Y-%m-%d_%H-%M-%S") + ".dlog"
+        filename = "{date}_{name}.dlog"\
+                   .format(name=self.player_name,
+                           date=now.strftime("%Y-%m-%d_%H-%M-%S"))
         with open(os.path.join(self.death_directory, filename), "w") as fp:
-            pass
+            fp.write("{0}, {1} {2}\n===\n".format(self.player_name, self.player.class_name, self.player.race_name))
+            fp.write("\nInventory\n---\n")
+            for item in self.player.inventory.items:
+                fp.write("* {0}x {1}\n".format(item.count if isinstance(item, ItemStackable) else 1, item.name))
+            fp.write("\nSkills\n---\n")
+            fp.write("The character level, effective level and character aptitude are listed\n\n")
+            for skill in self.player.skills.get_skills():
+                fp.write("* {2}  \n  {0} **{1}** *{3}*\n".format(self.player.skills[skill],
+                                                                 self.player.effective_skills[skill],
+                                                                 self.player.skills.get_skill_name(skill),
+                                                                 self.player.skills.get_aptitude(skill)))
 
     def set_view(self, new_active="", *args, **kwargs):
         self.current_view.on_deactivate()

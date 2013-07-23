@@ -37,6 +37,8 @@ class Player(Entity):
         self.style = self.game.style["player"]
         self.exp = 0
         self.level_skills = ["char.hp"]
+        self.class_name = ""
+        self.race_name = ""
 
     def pre_round(self):
         Entity.pre_round(self)
@@ -112,4 +114,6 @@ def create_player(game, race, cls):
     player.hp = player.skills["char.hp"]
     player.mana = player.skills["char.mana"]
     player.effective_skills.replace_levels(player.skills)
+    player.race_name = playerdefs.race_descr[race][0]
+    player.class_name = playerdefs.class_descr[cls][0]
     return player
